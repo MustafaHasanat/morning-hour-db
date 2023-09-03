@@ -1,8 +1,10 @@
-import { Author } from './author.entity';
-import { Category } from './category.entity';
-// import { Item } from './item.entity';
+import { Author } from 'src/schemas/authors/entities/author.entity';
+import { Category } from 'src/schemas/categories/entities/category.entity';
+import { Item } from 'src/schemas/items/entities/item.entity';
+import { Order } from 'src/schemas/orders/entities/order.entity';
+import { Review } from 'src/schemas/reviews/entities/review.entity';
+import { User } from 'src/schemas/users/entities/user.entity';
 
-const entities = [Author, Category];
+const entities = [Author, Category, Item, User, Review, Order];
 
-export { Author, Category };
 export default entities;
