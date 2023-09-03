@@ -1,12 +1,19 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { AuthorModule } from './modules/author.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthorsModule } from './schemas/authors/authors.module';
+import { CategoriesModule } from './schemas/categories/categories.module';
+import { ItemsModule } from './schemas/items/items.module';
+import { UsersModule } from './schemas/users/users.module';
+import { AuthModule } from './schemas/auth/auth.module';
 import entities from './entities';
-import { CategoryModule } from './modules/category.module';
-// import { ItemModule } from './modules/item.module';
+import { JwtModule } from '@nestjs/jwt';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './schemas/auth/auth.guard';
+import { OrdersModule } from './schemas/orders/orders.module';
+import { ReviewsModule } from './schemas/reviews/review.module';
 
 @Module({
   imports: [
@@ -25,11 +32,26 @@ import { CategoryModule } from './modules/category.module';
       }),
       inject: [ConfigService],
     }),
-    AuthorModule,
-    CategoryModule,
-    // ItemModule,
+    JwtModule.register({
+      global: true,
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '3600s' },
+    }),
+    AuthModule,
+    AuthorsModule,
+    CategoriesModule,
+    ItemsModule,
+    UsersModule,
+    OrdersModule,
+    ReviewsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
+  ],
 })
 export class AppModule {}

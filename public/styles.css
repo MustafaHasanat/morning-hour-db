@@ -17,6 +17,7 @@ section {
 body {
   gap: 3rem;
   padding: 3rem;
+  background: #f8f4f1;
 
   font-family:
     Helvetica Neue,
@@ -29,7 +30,7 @@ section {
 }
 
 h1 {
-  color: #55473F;
+  color: #55473f;
   font-size: 2.5rem;
   font-weight: bold;
 }
@@ -39,8 +40,13 @@ h3 {
   opacity: 0.5;
 }
 
+img {
+  width: 100px;
+  height: 100px;
+}
+
 button {
-  background: #fff;
+  background: #f8f4f1;
   border: 1px solid #cc9c74;
   border-radius: 0.2rem;
   color: #cc9c74;
@@ -54,6 +60,6 @@ button {
 button:hover {
   background: #cc9c74;
   border: none;
-  color: #fff;
+  color: #f8f4f1;
   transform: scale(1.1);
 }
