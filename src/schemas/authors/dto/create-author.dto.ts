@@ -15,5 +15,5 @@ export class CreateAuthorDto {
     format: 'binary',
     example: 'url',
   })
-  image: string;
+  image: Express.Multer.File;
 }

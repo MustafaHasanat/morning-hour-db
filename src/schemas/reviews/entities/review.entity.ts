@@ -1,6 +1,6 @@
-import { Item } from 'src/schemas/items/entities/item.entity';
-import { User } from 'src/schemas/users/entities/user.entity';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+// import { Item } from 'src/schemas/items/entities/item.entity';
+// import { User } from 'src/schemas/users/entities/user.entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Review {
@@ -17,9 +17,11 @@ export class Review {
   })
   rating: number;
 
-  @ManyToOne(() => User, (user) => user.reviews)
-  user: User;
+  //relations
 
-  @ManyToOne(() => Item, (item) => item.reviews)
-  item: Item;
+  // @ManyToOne(() => User, (user) => user.reviews)
+  // user: User;
+
+  // @ManyToOne(() => Item, (item) => item.reviews)
+  // item: Item;
 }

@@ -1,14 +1,15 @@
-import { Min, MinLength } from 'class-validator';
+import { MinLength } from 'class-validator';
 import { Author } from 'src/schemas/authors/entities/author.entity';
-import { Category } from 'src/schemas/categories/entities/category.entity';
-import { Order } from 'src/schemas/orders/entities/order.entity';
-import { Review } from 'src/schemas/reviews/entities/review.entity';
-import { User } from 'src/schemas/users/entities/user.entity';
+// import { Category } from 'src/schemas/categories/entities/category.entity';
+// import { Order } from 'src/schemas/orders/entities/order.entity';
+// import { Review } from 'src/schemas/reviews/entities/review.entity';
+// import { User } from 'src/schemas/users/entities/user.entity';
 import {
   Column,
   Entity,
   ManyToOne,
-  OneToMany,
+  // ManyToOne,
+  // OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -31,17 +32,15 @@ export class Item {
   })
   description: string;
 
-  @Min(1)
   @Column({
     nullable: false,
-    default: 1,
+    default: 5,
   })
   currentPrice: number;
 
-  @Min(0)
   @Column({
     nullable: false,
-    default: 0,
+    default: 1,
   })
   oldPrice: number;
 
@@ -62,24 +61,22 @@ export class Item {
   })
   image: string;
 
-  @Column({
-    type: 'simple-array',
-    nullable: false,
-  })
+  @Column('simple-array', { array: true, nullable: true })
   screenshots: string[];
 
-  @ManyToOne(() => Category, (category) => category.items)
-  category: Category;
+  // relations:
+  // @ManyToOne(() => Category, (category) => category.items)
+  // category: Category;
 
   @ManyToOne(() => Author, (author) => author.items)
-  author: Author;
+  authorId: string;
 
-  @ManyToOne(() => User, (user) => user.recentVisited)
-  user: User;
+  // @ManyToOne(() => User, (user) => user.recentVisited)
+  // user: User;
 
-  @ManyToOne(() => Order, (order) => order.items)
-  order: Order;
+  // @ManyToOne(() => Order, (order) => order.items)
+  // order: Order;
 
-  @OneToMany(() => Review, (review) => review.item)
-  reviews: Review[];
+  // @OneToMany(() => Review, (review) => review.item)
+  // reviews: Review[];
 }

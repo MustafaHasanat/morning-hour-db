@@ -66,7 +66,7 @@ export class AuthorsController {
     const response: CustomResponseDto = await this.authorsService.createAuthor({
       name,
       brief,
-      image: image.filename,
+      image,
     });
 
     return res.status(response.status).json(response);
@@ -90,7 +90,7 @@ export class AuthorsController {
       {
         name,
         brief,
-        image: image.filename,
+        image,
       },
     );
 

@@ -1,81 +1,53 @@
-export class CreateItemDto {}
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, MinLength } from 'class-validator';
 
-// export class ItemsDto {
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   title: string;
+export class CreateItemDto {
+  @IsNotEmpty()
+  @MinLength(3)
+  @ApiProperty({ example: 'item title' })
+  title: string;
 
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   description: string;
+  @IsNotEmpty()
+  @MinLength(20)
+  @ApiProperty({ example: 'short description' })
+  description: string;
 
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   currentPrice: number;
+  @IsNotEmpty()
+  @ApiProperty({ example: 1 })
+  currentPrice: number;
 
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   oldPrice: number;
+  @IsNotEmpty()
+  @ApiProperty({ example: 0 })
+  oldPrice: number;
 
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   isBestSelling: boolean;
+  @IsNotEmpty()
+  @ApiProperty({ example: false })
+  isBestSelling: boolean;
 
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   primaryColor: string;
+  @IsNotEmpty()
+  @ApiProperty({ example: '#000' })
+  primaryColor: string;
 
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   category: CategoryModel;
+  @ApiProperty({
+    type: 'string',
+    format: 'binary',
+    example: 'url',
+  })
+  image: Express.Multer.File;
 
-//   @IsNotEmpty()
-//   @ApiProperty({ example: 'username' })
-//   author: Author;
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'string',
+      format: 'binary',
+    },
+    example: ['url'],
+  })
+  screenshots: Array<Express.Multer.File>;
 
-//   @IsNotEmpty()
-//   @ApiProperty({
-//     type: 'string[]',
-//     format: 'binary',
-//     example: 'url',
-//   })
-//   image: string;
+  //   @IsNotEmpty()
+  //   @ApiProperty({ example: 'username' })
+  //   category: CategoryModel;
 
-//   @IsNotEmpty()
-//   @ApiProperty({
-//     type: 'string[]',
-//     format: 'binary',
-//     example: 'url',
-//   })
-//   screenshots: string[];
-// }
-
-// export const itemsBody = {
-//   schema: {
-//     type: 'object',
-//     properties: {
-//       title: { type: 'string' },
-//       description: { type: 'string' },
-//       currentPrice: { type: 'number' },
-//       oldPrice: { type: 'number' },
-//       isBestSelling: { type: 'boolean' },
-//       primaryColor: { type: 'string' },
-//       // category: {
-//       //   type: 'object',
-//       //   properties: {
-//       //     title: 'string',
-//       //     image: 'string',
-//       //   },
-//       // },
-//       // author: { type: 'author' },
-//       image: {
-//         type: 'string',
-//         format: 'binary',
-//       },
-//       screenshots: {
-//         type: 'string[]',
-//         format: 'binary',
-//       },
-//     },
-//   },
-// };
+  authorId: string;
+}

@@ -1,9 +1,9 @@
-import { Item } from 'src/schemas/items/entities/item.entity';
-import { Order } from 'src/schemas/orders/entities/order.entity';
-import { Review } from 'src/schemas/reviews/entities/review.entity';
+// import { Item } from 'src/schemas/items/entities/item.entity';
+// import { Order } from 'src/schemas/orders/entities/order.entity';
+// import { Review } from 'src/schemas/reviews/entities/review.entity';
 import { UserGender } from 'src/types/user-gender.type';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -48,22 +48,6 @@ export class User {
   })
   pricingRange: UserPricingRange;
 
-  @OneToMany(() => Item, (item) => item.user)
-  recentVisited: Item[];
-
-  @OneToMany(() => Item, (item) => item.user)
-  wishlist: Item[];
-
-  @OneToMany(() => Item, (item) => item.user)
-  @Column({
-    type: 'simple-json',
-    nullable: true,
-  })
-  cart: {
-    item: Item;
-    quantity: number;
-  }[];
-
   @Column({
     nullable: true,
   })
@@ -83,9 +67,27 @@ export class User {
   })
   avatar: string;
 
-  @OneToMany(() => Order, (order) => order.user)
-  orders: Order[];
+  // relations
 
-  @OneToMany(() => Review, (review) => review.user)
-  reviews: Review[];
+  // @OneToMany(() => Item, (item) => item.user)
+  // recentVisited: Item[];
+
+  // @OneToMany(() => Item, (item) => item.user)
+  // wishlist: Item[];
+
+  // @OneToMany(() => Item, (item) => item.user)
+  // @Column({
+  //   type: 'simple-json',
+  //   nullable: true,
+  // })
+  // cart: {
+  //   item: Item;
+  //   quantity: number;
+  // }[];
+
+  // @OneToMany(() => Order, (order) => order.user)
+  // orders: Order[];
+
+  // @OneToMany(() => Review, (review) => review.user)
+  // reviews: Review[];
 }

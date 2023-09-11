@@ -17,7 +17,9 @@ export class AuthorsService {
     try {
       const response = await this.authorRepository.find();
       return {
-        message: response ? 'Authors have been found' : 'Authors list is empty',
+        message: response.length
+          ? 'Authors have been found'
+          : 'Authors list is empty',
         data: response,
         status: 200,
       };
@@ -59,15 +61,25 @@ export class AuthorsService {
 
   async createAuthor(createAuthorDto: CreateAuthorDto) {
     try {
-      const newAuthor = this.authorRepository.create(createAuthorDto);
+      const newAuthor = this.authorRepository.create({
+        ...createAuthorDto,
+        image: createAuthorDto.image.filename,
+      });
       const response = await this.authorRepository.save(newAuthor);
+
       return {
         message: 'Author has been created successfully',
         data: response,
         status: 200,
       };
     } catch (error) {
-      return { message: 'Error occurred', data: error, status: 500 };
+      return {
+        message: 'Error occurred',
+        data: !createAuthorDto.image?.filename
+          ? 'You must provide a valid image'
+          : error,
+        status: 500,
+      };
     }
   }
 
@@ -79,6 +91,7 @@ export class AuthorsService {
         },
         {
           ...updateAuthorDto,
+          image: updateAuthorDto.image.filename,
         },
       );
 
@@ -92,7 +105,13 @@ export class AuthorsService {
         status: isAuthorExist ? 200 : 404,
       };
     } catch (error) {
-      return { message: 'Error occurred', data: error, status: 500 };
+      return {
+        message: 'Error occurred',
+        data: !updateAuthorDto.image?.filename
+          ? 'You must provide a valid image'
+          : error,
+        status: 500,
+      };
     }
   }
 

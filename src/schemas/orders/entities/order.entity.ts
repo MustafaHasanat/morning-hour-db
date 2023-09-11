@@ -1,23 +1,25 @@
-import { Item } from 'src/schemas/items/entities/item.entity';
-import { User } from 'src/schemas/users/entities/user.entity';
-import { Cart } from 'src/types/cart.type';
-import { Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+// import { Item } from 'src/schemas/items/entities/item.entity';
+// import { User } from 'src/schemas/users/entities/user.entity';
+// import { Cart } from 'src/types/cart.type';
+import { Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ManyToOne(() => User, (user) => user.orders)
-  user: User;
+  //relations
 
-  @OneToMany(() => Item, (item) => item.order)
-  items: Item[];
+  // @ManyToOne(() => User, (user) => user.orders)
+  // user: User;
 
-  get cart(): Cart[] {
-    return this.items.map((item) => ({
-      items: item,
-      quantity: 1,
-    }));
-  }
+  // @OneToMany(() => Item, (item) => item.order)
+  // items: Item[];
+
+  // get cart(): Cart[] {
+  //   return this.items.map((item) => ({
+  //     items: item,
+  //     quantity: 1,
+  //   }));
+  // }
 }
