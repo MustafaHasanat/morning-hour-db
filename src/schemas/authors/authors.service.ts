@@ -13,39 +13,116 @@ export class AuthorsService {
     private readonly authorRepository: Repository<Author>,
   ) {}
 
-  getAllAuthors() {
-    return this.authorRepository.find();
+  async getAllAuthors() {
+    try {
+      const response = await this.authorRepository.find();
+      return {
+        message: response ? 'Authors have been found' : 'Authors list is empty',
+        data: response,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  getAuthorById(id: string) {
-    return this.authorRepository.findOneBy({ id });
+  async getAuthorById(id: string) {
+    try {
+      const response = await this.authorRepository.findOneBy({ id });
+      return {
+        message: response ? 'Author has been found' : "Author doesn't exist",
+        data: response,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
   downloadImage(imageName: string) {
-    return join(process.cwd(), 'uploads/authors/' + imageName);
+    try {
+      const response = join(
+        process.cwd(),
+        'public/assets/authors/' + imageName,
+      );
+      return {
+        message: response
+          ? 'Image returned successfully'
+          : "Author doesn't exist",
+        data: response,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  createAuthor(createAuthorDto: CreateAuthorDto) {
-    const newAuthor = this.authorRepository.create(createAuthorDto);
-    return this.authorRepository.save(newAuthor);
+  async createAuthor(createAuthorDto: CreateAuthorDto) {
+    try {
+      const newAuthor = this.authorRepository.create(createAuthorDto);
+      const response = await this.authorRepository.save(newAuthor);
+      return {
+        message: 'Author has been created successfully',
+        data: response,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  updateAuthor(id: string, updateAuthorDto: UpdateAuthorDto) {
-    return this.authorRepository.update(
-      {
-        id,
-      },
-      {
-        ...updateAuthorDto,
-      },
-    );
+  async updateAuthor(id: string, updateAuthorDto: UpdateAuthorDto) {
+    try {
+      const response = await this.authorRepository.update(
+        {
+          id,
+        },
+        {
+          ...updateAuthorDto,
+        },
+      );
+
+      const isAuthorExist = response.affected !== 0;
+
+      return {
+        message: isAuthorExist
+          ? 'Author has been updated successfully'
+          : "Author doesn't exist",
+        data: response,
+        status: isAuthorExist ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  deleteAllAuthors() {
-    return this.authorRepository.clear();
+  async deleteAllAuthors() {
+    try {
+      const response = await this.authorRepository.query(
+        'TRUNCATE TABLE author CASCADE;',
+      );
+      return {
+        message: 'Authors data are wiped out',
+        data: response,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  deleteAuthor(id: string) {
-    return this.authorRepository.delete(id);
+  async deleteAuthor(id: string) {
+    try {
+      const response = await this.authorRepository.delete(id);
+      return {
+        message: response
+          ? 'Author has been deleted successfully'
+          : "Author doesn't exist",
+        data: response,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 }

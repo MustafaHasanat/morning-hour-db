@@ -26,6 +26,7 @@ export class Author {
   })
   image: string;
 
+  // relations:
   @OneToMany(() => Item, (item) => item.author)
   items: Item[];
 }

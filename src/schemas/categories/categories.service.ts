@@ -22,7 +22,7 @@ export class CategoriesService {
   }
 
   downloadImage(imageName: string) {
-    return join(process.cwd(), 'uploads/categories/' + imageName);
+    return join(process.cwd(), 'public/assets/categories/' + imageName);
   }
 
   createCategory(createCategoryDto: CreateCategoryDto) {

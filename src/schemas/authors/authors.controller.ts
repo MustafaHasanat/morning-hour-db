@@ -19,6 +19,8 @@ import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { authorBody } from './dto/author-body';
+import { CustomResponseDto } from 'src/dtos/custom-response.dto';
+import { Response } from 'express';
 
 @ApiTags('Authors')
 @Controller('authors')
@@ -26,18 +28,27 @@ export class AuthorsController {
   constructor(private readonly authorsService: AuthorsService) {}
 
   @Get()
-  getAllAuthors() {
-    return this.authorsService.getAllAuthors();
+  async getAllAuthors(@Res() res: Response) {
+    const response: CustomResponseDto =
+      await this.authorsService.getAllAuthors();
+
+    return res.status(response.status).json(response);
   }
 
   @Get(':id')
-  getAuthorById(@Param('id') id: string) {
-    return this.authorsService.getAuthorById(id);
+  async getAuthorById(@Param('id') id: string, @Res() res: Response) {
+    const response: CustomResponseDto =
+      await this.authorsService.getAuthorById(id);
+
+    return res.status(response.status).json(response);
   }
 
   @Get('assets/:imageName')
-  downloadImage(@Param('imageName') imageName: string, @Res() res) {
-    return res.sendFile(this.authorsService.downloadImage(imageName));
+  async downloadImage(
+    @Param('imageName') imageName: string,
+    @Res() res: Response,
+  ) {
+    return res.sendFile(this.authorsService.downloadImage(imageName).data);
   }
 
   @Post()
@@ -46,16 +57,19 @@ export class AuthorsController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image', storeLocalFile('authors')))
   @ApiBody(authorBody)
-  createAuthor(
+  async createAuthor(
     @UploadedFile() image: Express.Multer.File,
     @Body() createAuthorDto: CreateAuthorDto,
+    @Res() res: Response,
   ) {
     const { name, brief } = createAuthorDto;
-    return this.authorsService.createAuthor({
+    const response: CustomResponseDto = await this.authorsService.createAuthor({
       name,
       brief,
       image: image.filename,
     });
+
+    return res.status(response.status).json(response);
   }
 
   @Patch(':id')
@@ -64,26 +78,38 @@ export class AuthorsController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image', storeLocalFile('authors')))
   @ApiBody(authorBody)
-  updateAuthor(
+  async updateAuthor(
     @Param('id') id: string,
     @Body() updateAuthorDto: UpdateAuthorDto,
     @UploadedFile() image: Express.Multer.File,
+    @Res() res: Response,
   ) {
     const { name, brief } = updateAuthorDto;
-    return this.authorsService.updateAuthor(id, {
-      name,
-      brief,
-      image: image.filename,
-    });
+    const response: CustomResponseDto = await this.authorsService.updateAuthor(
+      id,
+      {
+        name,
+        brief,
+        image: image.filename,
+      },
+    );
+
+    return res.status(response.status).json(response);
   }
 
   @Delete('wipe')
-  deleteAllAuthors() {
-    return this.authorsService.deleteAllAuthors();
+  async deleteAllAuthors(@Res() res: Response) {
+    const response: CustomResponseDto =
+      await this.authorsService.deleteAllAuthors();
+
+    return res.status(response.status).json(response);
   }
 
   @Delete(':id')
-  deleteAuthor(@Param('id') id: string) {
-    return this.authorsService.deleteAuthor(id);
+  async deleteAuthor(@Param('id') id: string, @Res() res: Response) {
+    const response: CustomResponseDto =
+      await this.authorsService.deleteAuthor(id);
+
+    return res.status(response.status).json(response);
   }
 }

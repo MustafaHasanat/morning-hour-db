@@ -5,7 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 export const storeLocalFile = (subPath: string) => {
   return {
     storage: diskStorage({
-      destination: './uploads/' + subPath,
+      destination: './public/assets/' + subPath,
       filename: (req, file, cb) => {
         const filename: string = 'image-' + uuidv4();
         const extension: string = parse(file.originalname).ext;
