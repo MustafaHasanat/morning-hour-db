@@ -1,6 +1,6 @@
 import { MinLength } from 'class-validator';
-import { Item } from 'src/schemas/items/entities/item.entity';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+// import { Item } from 'src/schemas/items/entities/item.entity';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class Category {
@@ -19,6 +19,8 @@ export class Category {
   })
   image: string;
 
-  @OneToMany(() => Item, (item) => item.category)
-  items: Item[];
+  // relations:
+
+  // @OneToMany(() => Item, (item) => item.category)
+  // items: Item[];
 }
