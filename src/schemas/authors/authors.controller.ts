@@ -11,9 +11,16 @@ import {
   UseInterceptors,
   UploadedFile,
   Res,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { storeLocalFile } from 'src/utils/storage';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
@@ -28,9 +35,13 @@ export class AuthorsController {
   constructor(private readonly authorsService: AuthorsService) {}
 
   @Get()
-  async getAllAuthors(@Res() res: Response) {
+  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  async getAuthors(
+    @Query() conditions: Record<string, any>,
+    @Res() res: Response,
+  ) {
     const response: CustomResponseDto =
-      await this.authorsService.getAllAuthors();
+      await this.authorsService.getAuthors(conditions);
 
     return res.status(response.status).json(response);
   }

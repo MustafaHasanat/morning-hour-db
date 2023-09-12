@@ -13,39 +13,138 @@ export class CategoriesService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  getAllCategories() {
-    return this.categoryRepository.find();
+  async getCategories(conditions: Record<string, any>) {
+    try {
+      const response = await this.categoryRepository.findBy(conditions);
+
+      return {
+        message: response.length
+          ? 'Categories have been found'
+          : 'Categories list is empty',
+        data: response,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  getCategoryById(id: string) {
-    return this.categoryRepository.findOneBy({ id });
+  async getCategoryById(id: string) {
+    try {
+      const response = await this.categoryRepository.findOneBy({ id });
+      return {
+        message: response
+          ? 'Category has been found'
+          : "Category doesn't exist",
+        data: response,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
   downloadImage(imageName: string) {
-    return join(process.cwd(), 'public/assets/categories/' + imageName);
+    try {
+      const response = join(
+        process.cwd(),
+        'public/assets/categories/' + imageName,
+      );
+      return {
+        message: response
+          ? 'Image returned successfully'
+          : "Category doesn't exist",
+        data: response,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  createCategory(createCategoryDto: CreateCategoryDto) {
-    const newCategory = this.categoryRepository.create(createCategoryDto);
-    return this.categoryRepository.save(newCategory);
+  async createCategory(createCategoryDto: CreateCategoryDto) {
+    try {
+      const newCategory = this.categoryRepository.create({
+        ...createCategoryDto,
+        image: createCategoryDto.image.filename,
+      });
+      const response = await this.categoryRepository.save(newCategory);
+
+      return {
+        message: 'Category has been created successfully',
+        data: response,
+        status: 200,
+      };
+    } catch (error) {
+      return {
+        message: 'Error occurred',
+        data: !createCategoryDto.image?.filename
+          ? 'You must provide a valid image'
+          : error,
+        status: 500,
+      };
+    }
   }
 
-  updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
-    return this.categoryRepository.update(
-      {
-        id,
-      },
-      {
-        ...updateCategoryDto,
-      },
-    );
+  async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
+    try {
+      const response = await this.categoryRepository.update(
+        {
+          id,
+        },
+        {
+          ...updateCategoryDto,
+          image: updateCategoryDto.image.filename,
+        },
+      );
+
+      const isCategoryExist = response.affected !== 0;
+
+      return {
+        message: isCategoryExist
+          ? 'Category has been updated successfully'
+          : "Category doesn't exist",
+        data: response,
+        status: isCategoryExist ? 200 : 404,
+      };
+    } catch (error) {
+      return {
+        message: 'Error occurred',
+        data: !updateCategoryDto.image?.filename
+          ? 'You must provide a valid image'
+          : error,
+        status: 500,
+      };
+    }
   }
 
-  deleteAllCategories() {
-    return this.categoryRepository.clear();
+  async deleteAllCategories() {
+    try {
+      const response = await this.categoryRepository.query(
+        'TRUNCATE TABLE category CASCADE;',
+      );
+      return {
+        message: 'Categories data are wiped out',
+        data: response,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
-  deleteCategory(id: string) {
-    return this.categoryRepository.delete(id);
+  async deleteCategory(id: string) {
+    try {
+      const response = await this.categoryRepository.delete(id);
+      return {
+        message: response
+          ? 'Category has been deleted successfully'
+          : "Category doesn't exist",
+        data: response,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 }

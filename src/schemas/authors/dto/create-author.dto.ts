@@ -7,9 +7,11 @@ export class CreateAuthorDto {
   @ApiProperty({ example: 'username' })
   name: string;
 
+  @IsNotEmpty()
   @ApiProperty({ example: 'brief about him/her' })
   brief: string;
 
+  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     format: 'binary',

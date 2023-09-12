@@ -9,21 +9,26 @@ import {
   Delete,
   Patch,
   UseInterceptors,
-  UploadedFile,
   Res,
   UploadedFiles,
   UseFilters,
+  Query,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
-import { ApiBody, ApiConsumes, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
-import { CreateItemDto } from './dto/create-item.dto';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { storeLocalFile } from 'src/utils/storage';
 import { Response } from 'express';
-import { UpdateItemDto } from './dto/update-item.dto';
 import { itemBody } from './dto/item-body';
 import { CustomBadRequestFilter } from 'src/decorators/custom-bad-request-filter.decorator';
+import { CreateItemDto } from './dto/create-item.dto';
 
 @ApiTags('Items')
 @Controller('items')
@@ -32,8 +37,13 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
-  async getAllItems(@Res() res: Response) {
-    const response: CustomResponseDto = await this.itemsService.getAllItems();
+  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  async getItems(
+    @Query() conditions: Record<string, any>,
+    @Res() res: Response,
+  ) {
+    const response: CustomResponseDto =
+      await this.itemsService.getItems(conditions);
 
     return res.status(response.status).json(response);
   }
@@ -57,15 +67,27 @@ export class ItemsController {
   @ApiOkResponse({ type: CreateItemDto })
   @UsePipes(ValidationPipe)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', storeLocalFile('items')))
-  @UseInterceptors(FilesInterceptor('screenshots', 5, storeLocalFile('items')))
   @ApiBody(itemBody)
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'image', maxCount: 1 },
+        { name: 'screenshots', maxCount: 5 },
+      ],
+      storeLocalFile('items'),
+    ),
+  )
   async createItem(
-    @UploadedFile() image: Express.Multer.File,
-    @UploadedFiles() screenshots: Array<Express.Multer.File>,
+    @UploadedFiles()
+    files: {
+      image: Express.Multer.File[];
+      screenshots: Express.Multer.File[];
+    },
     @Body() createItemDto: CreateItemDto,
     @Res() res: Response,
   ) {
+    const { image, screenshots } = files;
+
     const {
       title,
       description,
@@ -76,8 +98,6 @@ export class ItemsController {
       authorId,
     } = createItemDto;
 
-    console.log(screenshots);
-
     const response: CustomResponseDto = await this.itemsService.createItem({
       title,
       description,
@@ -86,27 +106,39 @@ export class ItemsController {
       isBestSelling,
       primaryColor,
       authorId,
-      image,
-      screenshots: [],
+      image: image[0],
+      screenshots,
     });
 
     return res.status(response.status).json(response);
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateItemDto })
+  @ApiOkResponse({ type: CreateItemDto })
   @UsePipes(ValidationPipe)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', storeLocalFile('items')))
-  @UseInterceptors(FilesInterceptor('screenshots', 10, storeLocalFile('items')))
   @ApiBody(itemBody)
+  @UseInterceptors(
+    FileFieldsInterceptor(
+      [
+        { name: 'image', maxCount: 1 },
+        { name: 'screenshots', maxCount: 5 },
+      ],
+      storeLocalFile('items'),
+    ),
+  )
   async updateItem(
     @Param('id') id: string,
-    @Body() updateItemDto: UpdateItemDto,
-    @UploadedFile() image: Express.Multer.File,
-    @UploadedFiles() screenshots: Array<Express.Multer.File>,
+    @UploadedFiles()
+    files: {
+      image: Express.Multer.File[];
+      screenshots: Express.Multer.File[];
+    },
+    @Body() updateItemDto: CreateItemDto,
     @Res() res: Response,
   ) {
+    const { image, screenshots } = files;
+
     const {
       title,
       description,
@@ -116,6 +148,7 @@ export class ItemsController {
       primaryColor,
       authorId,
     } = updateItemDto;
+
     const response: CustomResponseDto = await this.itemsService.updateItem(id, {
       title,
       description,
@@ -124,7 +157,7 @@ export class ItemsController {
       isBestSelling,
       primaryColor,
       authorId,
-      image,
+      image: image[0],
       screenshots,
     });
 

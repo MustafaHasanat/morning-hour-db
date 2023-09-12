@@ -11,14 +11,23 @@ import {
   Res,
   UseInterceptors,
   UploadedFile,
+  Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { storeLocalFile } from 'src/utils/storage';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { categoryBody } from './dto/category-body';
+import { CustomResponseDto } from 'src/dtos/custom-response.dto';
+import { Response } from 'express';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -26,18 +35,31 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  getAllCategories() {
-    return this.categoriesService.getAllCategories();
+  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  async getCategories(
+    @Query() conditions: Record<string, any>,
+    @Res() res: Response,
+  ) {
+    const response: CustomResponseDto =
+      await this.categoriesService.getCategories(conditions);
+
+    return res.status(response.status).json(response);
   }
 
   @Get(':id')
-  getCategoryById(@Param('id') id: string) {
-    return this.categoriesService.getCategoryById(id);
+  async getCategoryById(@Param('id') id: string, @Res() res: Response) {
+    const response: CustomResponseDto =
+      await this.categoriesService.getCategoryById(id);
+
+    return res.status(response.status).json(response);
   }
 
   @Get('assets/:imageName')
-  downloadImage(@Param('imageName') imageName: string, @Res() res) {
-    return res.sendFile(this.categoriesService.downloadImage(imageName));
+  async downloadImage(
+    @Param('imageName') imageName: string,
+    @Res() res: Response,
+  ) {
+    return res.sendFile(this.categoriesService.downloadImage(imageName).data);
   }
 
   @Post()
@@ -46,42 +68,56 @@ export class CategoriesController {
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
   @ApiBody(categoryBody)
-  createCategory(
+  async createCategory(
     @UploadedFile() image: Express.Multer.File,
     @Body() createCategoryDto: CreateCategoryDto,
+    @Res() res: Response,
   ) {
     const { title } = createCategoryDto;
-    return this.categoriesService.createCategory({
-      title,
-      image: image.filename,
-    });
+    const response: CustomResponseDto =
+      await this.categoriesService.createCategory({
+        title,
+        image,
+      });
+
+    return res.status(response.status).json(response);
   }
 
   @Patch(':id')
   @ApiOkResponse({ type: UpdateCategoryDto })
   @UsePipes(ValidationPipe)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', storeLocalFile('authors')))
+  @UseInterceptors(FileInterceptor('image', storeLocalFile('categorys')))
   @ApiBody(categoryBody)
-  updateCategory(
+  async updateCategory(
     @Param('id') id: string,
-    @Body() updateAuthorDto: UpdateCategoryDto,
+    @Body() updateCategoryDto: UpdateCategoryDto,
     @UploadedFile() image: Express.Multer.File,
+    @Res() res: Response,
   ) {
-    const { title } = updateAuthorDto;
-    return this.categoriesService.updateCategory(id, {
-      title,
-      image: image.filename,
-    });
+    const { title } = updateCategoryDto;
+    const response: CustomResponseDto =
+      await this.categoriesService.updateCategory(id, {
+        title,
+        image,
+      });
+
+    return res.status(response.status).json(response);
   }
 
   @Delete('wipe')
-  deleteAllCategories() {
-    return this.categoriesService.deleteAllCategories();
+  async deleteAllCategories(@Res() res: Response) {
+    const response: CustomResponseDto =
+      await this.categoriesService.deleteAllCategories();
+
+    return res.status(response.status).json(response);
   }
 
   @Delete(':id')
-  deleteCategory(@Param('id') id: string) {
-    return this.categoriesService.deleteCategory(id);
+  async deleteCategory(@Param('id') id: string, @Res() res: Response) {
+    const response: CustomResponseDto =
+      await this.categoriesService.deleteCategory(id);
+
+    return res.status(response.status).json(response);
   }
 }

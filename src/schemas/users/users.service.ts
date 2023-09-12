@@ -12,16 +12,26 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async getAllUsers() {
-    const users = await this.userRepository.find();
+  async getUsers(conditions: Record<string, any>) {
+    try {
+      const response = await this.userRepository.findBy(conditions);
 
-    // remove the password from all the users before sending response
-    const deprecatedPassUsers = users.map((user) => {
-      const { password, ...rest } = user;
-      return rest;
-    });
+      // remove the password from all the users before sending response
+      const deprecatedPassUsers = response.map((user) => {
+        const { password, ...rest } = user;
+        return rest;
+      });
 
-    return deprecatedPassUsers;
+      return {
+        message: response.length
+          ? 'Users have been found'
+          : 'Users list is empty',
+        data: deprecatedPassUsers,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
   }
 
   getUserById(id: string) {

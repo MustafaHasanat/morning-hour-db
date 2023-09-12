@@ -1,15 +1,14 @@
 import { MinLength } from 'class-validator';
 import { Author } from 'src/schemas/authors/entities/author.entity';
-// import { Category } from 'src/schemas/categories/entities/category.entity';
-// import { Order } from 'src/schemas/orders/entities/order.entity';
-// import { Review } from 'src/schemas/reviews/entities/review.entity';
-// import { User } from 'src/schemas/users/entities/user.entity';
+import { Category } from 'src/schemas/categories/entities/category.entity';
+import { Order } from 'src/schemas/orders/entities/order.entity';
+import { Review } from 'src/schemas/reviews/entities/review.entity';
 import {
   Column,
   Entity,
+  ManyToMany,
   ManyToOne,
-  // ManyToOne,
-  // OneToMany,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -61,22 +60,19 @@ export class Item {
   })
   image: string;
 
-  @Column('simple-array', { array: true, nullable: true })
+  @Column('text', { array: true, nullable: true })
   screenshots: string[];
 
   // relations:
-  // @ManyToOne(() => Category, (category) => category.items)
-  // category: Category;
+  @ManyToOne(() => Category, (category) => category.items)
+  categoryId: string;
 
   @ManyToOne(() => Author, (author) => author.items)
   authorId: string;
 
-  // @ManyToOne(() => User, (user) => user.recentVisited)
-  // user: User;
+  @ManyToMany(() => Order, (order) => order.items)
+  orders: string[];
 
-  // @ManyToOne(() => Order, (order) => order.items)
-  // order: Order;
-
-  // @OneToMany(() => Review, (review) => review.item)
-  // reviews: Review[];
+  @OneToMany(() => Review, (review) => review.itemId)
+  reviews: string[];
 }

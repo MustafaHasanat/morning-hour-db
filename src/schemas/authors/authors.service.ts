@@ -1,21 +1,32 @@
-import { Injectable } from '@nestjs/common';
+import {
+  // BadRequestException,
+  Inject,
+  Injectable,
+  // NotFoundException,
+  forwardRef,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { Repository } from 'typeorm';
 import { Author } from './entities/author.entity';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
+import { ItemsService } from '../items/items.service';
 
 @Injectable()
 export class AuthorsService {
   constructor(
     @InjectRepository(Author)
     private readonly authorRepository: Repository<Author>,
+
+    @Inject(forwardRef(() => ItemsService))
+    private readonly itemsService: ItemsService,
   ) {}
 
-  async getAllAuthors() {
+  async getAuthors(conditions: Record<string, any>) {
     try {
-      const response = await this.authorRepository.find();
+      const response = await this.authorRepository.findBy(conditions);
+
       return {
         message: response.length
           ? 'Authors have been found'
@@ -144,4 +155,36 @@ export class AuthorsService {
       return { message: 'Error occurred', data: error, status: 500 };
     }
   }
+
+  // async appendItem(itemId: string, prevItems: string[]) {
+  //   try {
+  //     const item = await this.itemsService.getItemById(itemId);
+  //     if (!item) {
+  //       throw new NotFoundException("Item doesn't exist");
+  //     }
+
+  //     if (prevItems.includes(itemId)) {
+  //       throw new BadRequestException(
+  //         'Item is already in appended to the author',
+  //       );
+  //     }
+
+  //     const response = await this.authorRepository.update(
+  //       {
+  //         id: itemId,
+  //       },
+  //       {
+  //         items: [...prevItems],
+  //       },
+  //     );
+
+  //     return {
+  //       message: 'Item is appended to the author',
+  //       data: response,
+  //       status: 200,
+  //     };
+  //   } catch (error) {
+  //     return { message: 'Error occurred', data: error, status: 500 };
+  //   }
+  // }
 }

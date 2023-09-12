@@ -28,8 +28,11 @@ export class CreateItemDto {
   @ApiProperty({ example: '#000' })
   primaryColor: string;
 
+  @ApiProperty({ example: 'd996b291-ea4e-486d-a2a3-f79676bfe13c' })
+  authorId: string;
+
   @ApiProperty({
-    type: 'string',
+    type: 'file',
     format: 'binary',
     example: 'url',
   })
@@ -43,11 +46,9 @@ export class CreateItemDto {
     },
     example: ['url'],
   })
-  screenshots: Array<Express.Multer.File>;
+  screenshots: Express.Multer.File[];
 
   //   @IsNotEmpty()
   //   @ApiProperty({ example: 'username' })
   //   category: CategoryModel;
-
-  authorId: string;
 }

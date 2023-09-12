@@ -1,6 +1,19 @@
 export const itemBody = {
+  consumes: ['multipart/form-data'],
+  produces: ['application/json'],
   schema: {
     type: 'object',
+    required: [
+      'title',
+      'description',
+      'currentPrice',
+      'oldPrice',
+      'isBestSelling',
+      'primaryColor',
+      'authorId',
+      'image',
+      'screenshots',
+    ],
     properties: {
       title: { type: 'string' },
       description: { type: 'string' },
@@ -9,10 +22,7 @@ export const itemBody = {
       isBestSelling: { type: 'boolean' },
       primaryColor: { type: 'string' },
       authorId: { type: 'string' },
-      image: {
-        type: 'string',
-        format: 'binary',
-      },
+      image: { type: 'string', format: 'binary' },
       screenshots: {
         type: 'array',
         items: {
