@@ -3,3 +3,13 @@
 </p>
 
 # The database for the Morning Hour website
+
+# Connecting to the DB (.env):
+- DB_HOST=localhost
+- DB_PORT=5432
+- DB_USERNAME=postgres
+- DB_PASSWORD=postgres
+- DB_NAME=morninghour
+- JWT_SECRET=*******
+- FRONTEND_URL=http://localhost:3001
+- PORT=3000

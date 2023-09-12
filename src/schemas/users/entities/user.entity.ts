@@ -1,9 +1,11 @@
 // import { Item } from 'src/schemas/items/entities/item.entity';
 // import { Order } from 'src/schemas/orders/entities/order.entity';
 // import { Review } from 'src/schemas/reviews/entities/review.entity';
+import { Order } from 'src/schemas/orders/entities/order.entity';
+import { Review } from 'src/schemas/reviews/entities/review.entity';
 import { UserGender } from 'src/types/user-gender.type';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
 export class User {
@@ -85,9 +87,9 @@ export class User {
   //   quantity: number;
   // }[];
 
-  // @OneToMany(() => Order, (order) => order.user)
-  // orders: Order[];
+  @OneToMany(() => Order, (order) => order.userId)
+  orders: string[];
 
-  // @OneToMany(() => Review, (review) => review.user)
-  // reviews: Review[];
+  @OneToMany(() => Review, (review) => review.userId)
+  reviews: string[];
 }

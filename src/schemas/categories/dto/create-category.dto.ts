@@ -11,5 +11,5 @@ export class CreateCategoryDto {
     format: 'binary',
     example: 'url',
   })
-  image: string;
+  image: Express.Multer.File;
 }

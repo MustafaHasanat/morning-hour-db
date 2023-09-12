@@ -1,22 +1,26 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Item } from '../items/entities/item.entity';
 import { Repository } from 'typeorm';
 import { join } from 'path';
 import { CreateItemDto } from '../items/dto/create-item.dto';
 import { UpdateItemDto } from '../items/dto/update-item.dto';
+import { AuthorsService } from '../authors/authors.service';
 
 @Injectable()
 export class ItemsService {
   constructor(
     @InjectRepository(Item)
     private readonly itemRepository: Repository<Item>,
+
+    @Inject(forwardRef(() => AuthorsService))
+    private readonly authorsService: AuthorsService,
   ) {}
 
-  async getAllItems() {
+  async getItems(conditions: Record<string, any>) {
     try {
-      const response = await this.itemRepository.find();
-      console.log(response);
+      const response = await this.itemRepository.findBy(conditions);
+
       return {
         message: response.length
           ? 'Items have been found'
@@ -59,6 +63,19 @@ export class ItemsService {
 
   async createItem(createItemDto: CreateItemDto) {
     try {
+      // check the author
+      const author = await this.authorsService.getAuthorById(
+        createItemDto.authorId,
+      );
+      if (!author) {
+        return {
+          message: 'Error occurred',
+          data: 'Provided author does not exist',
+          status: 400,
+        };
+      }
+
+      // create the item
       const newItem = this.itemRepository.create({
         ...createItemDto,
         image: createItemDto.image.filename,
@@ -67,6 +84,9 @@ export class ItemsService {
         ),
       });
       const response = await this.itemRepository.save(newItem);
+
+      // append the item to author
+      // this.authorsService.appendItem(newItem.id, newItem.screenshots);
 
       return {
         message: 'Item has been created successfully',
@@ -86,6 +106,19 @@ export class ItemsService {
 
   async updateItem(id: string, updateItemDto: UpdateItemDto) {
     try {
+      const item = await this.getItemById(updateItemDto.authorId);
+      const author = await this.authorsService.getAuthorById(
+        updateItemDto.authorId,
+      );
+
+      if (!item || !author) {
+        return {
+          message: 'Invalid data',
+          data: `Provided ${!item ? 'item' : 'author'} does not exist`,
+          status: 400,
+        };
+      }
+
       const response = await this.itemRepository.update(
         {
           id,
