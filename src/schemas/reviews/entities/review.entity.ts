@@ -19,8 +19,8 @@ export class Review {
 
   //relations
   @ManyToOne(() => User, (user) => user.reviews)
-  userId: User;
+  userId: string;
 
   @ManyToOne(() => Item, (item) => item.reviews)
-  itemId: Item;
+  itemId: string;
 }

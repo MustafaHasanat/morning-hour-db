@@ -1,6 +1,3 @@
-// import { Item } from 'src/schemas/items/entities/item.entity';
-// import { Order } from 'src/schemas/orders/entities/order.entity';
-// import { Review } from 'src/schemas/reviews/entities/review.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
 import { UserGender } from 'src/types/user-gender.type';
@@ -31,18 +28,19 @@ export class User {
   @Column({
     nullable: true,
   })
-  phoneNumber: number;
+  phoneNumber: string;
 
   @Column({
     type: 'enum',
     enum: UserGender,
-    nullable: false,
+    nullable: true,
     default: UserGender.MALE,
   })
   gender: UserGender;
 
   @Column({
     type: 'simple-json',
+    nullable: true,
     default: {
       max: 50,
       min: 0,
@@ -58,11 +56,11 @@ export class User {
   @Column({ nullable: false, default: false })
   isAdmin: boolean;
 
-  @Column({
-    nullable: true,
-    type: 'simple-array',
-  })
-  paymentMethods: string[];
+  // @Column({
+  //   nullable: true,
+  //   type: 'simple-array',
+  // })
+  // paymentMethods: string[];
 
   @Column({
     nullable: true,

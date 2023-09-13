@@ -1,10 +1,4 @@
-import {
-  // BadRequestException,
-  Inject,
-  Injectable,
-  // NotFoundException,
-  forwardRef,
-} from '@nestjs/common';
+import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { join } from 'path';
 import { Repository } from 'typeorm';
@@ -12,6 +6,7 @@ import { Author } from './entities/author.entity';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { ItemsService } from '../items/items.service';
+import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
 
 @Injectable()
 export class AuthorsService {
@@ -131,6 +126,10 @@ export class AuthorsService {
       const response = await this.authorRepository.query(
         'TRUNCATE TABLE author CASCADE;',
       );
+
+      // delete all files in the dir
+      deleteFiles('./public/assets/authors/');
+
       return {
         message: 'Authors data are wiped out',
         data: response,
@@ -143,48 +142,28 @@ export class AuthorsService {
 
   async deleteAuthor(id: string) {
     try {
+      const author = await this.getAuthorById(id);
+      if (author.status === 404) {
+        return {
+          message: "Author doesn't exist",
+          data: author,
+          status: 404,
+        };
+      }
+
+      const imageName = author?.data?.image;
       const response = await this.authorRepository.delete(id);
+
+      // delete the image related to the file
+      deleteFile('./public/assets/authors/' + imageName);
+
       return {
-        message: response
-          ? 'Author has been deleted successfully'
-          : "Author doesn't exist",
+        message: 'Author has been deleted successfully',
         data: response,
-        status: response ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };
     }
   }
-
-  // async appendItem(itemId: string, prevItems: string[]) {
-  //   try {
-  //     const item = await this.itemsService.getItemById(itemId);
-  //     if (!item) {
-  //       throw new NotFoundException("Item doesn't exist");
-  //     }
-
-  //     if (prevItems.includes(itemId)) {
-  //       throw new BadRequestException(
-  //         'Item is already in appended to the author',
-  //       );
-  //     }
-
-  //     const response = await this.authorRepository.update(
-  //       {
-  //         id: itemId,
-  //       },
-  //       {
-  //         items: [...prevItems],
-  //       },
-  //     );
-
-  //     return {
-  //       message: 'Item is appended to the author',
-  //       data: response,
-  //       status: 200,
-  //     };
-  //   } catch (error) {
-  //     return { message: 'Error occurred', data: error, status: 500 };
-  //   }
-  // }
 }

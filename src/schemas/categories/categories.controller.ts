@@ -87,7 +87,7 @@ export class CategoriesController {
   @ApiOkResponse({ type: UpdateCategoryDto })
   @UsePipes(ValidationPipe)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', storeLocalFile('categorys')))
+  @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
   @ApiBody(categoryBody)
   async updateCategory(
     @Param('id') id: string,

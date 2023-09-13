@@ -1,5 +1,5 @@
-import { UsersService } from './../users/users.service';
 /* eslint-disable @typescript-eslint/no-unused-vars */
+import { UsersService } from './../users/users.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
