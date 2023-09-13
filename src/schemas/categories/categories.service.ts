@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
+import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
 
 @Injectable()
 export class CategoriesService {
@@ -123,6 +124,10 @@ export class CategoriesService {
       const response = await this.categoryRepository.query(
         'TRUNCATE TABLE category CASCADE;',
       );
+
+      // delete all files in the dir
+      deleteFiles('./public/assets/categories/');
+
       return {
         message: 'Categories data are wiped out',
         data: response,
@@ -135,13 +140,24 @@ export class CategoriesService {
 
   async deleteCategory(id: string) {
     try {
+      const category = await this.getCategoryById(id);
+      if (category.status === 404) {
+        return {
+          message: "Category doesn't exist",
+          data: category,
+          status: 404,
+        };
+      }
+
       const response = await this.categoryRepository.delete(id);
+
+      // delete the image related to the file
+      deleteFile('./public/assets/categories/' + category?.data?.image);
+
       return {
-        message: response
-          ? 'Category has been deleted successfully'
-          : "Category doesn't exist",
+        message: 'Category has been deleted successfully',
         data: response,
-        status: response ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };

@@ -15,7 +15,7 @@ export class AuthService {
   ) {}
 
   async logIn(email: string, password: string) {
-    const user = await this.usersService.getUser({ email });
+    const user = await this.usersService.getUsers({ email })[0];
 
     if (!user) {
       throw new BadRequestException('Invalid credentials');

@@ -11,7 +11,6 @@ export class CreateAuthorDto {
   @ApiProperty({ example: 'brief about him/her' })
   brief: string;
 
-  @IsNotEmpty()
   @ApiProperty({
     type: 'string',
     format: 'binary',

@@ -6,6 +6,7 @@ import { join } from 'path';
 import { CreateItemDto } from '../items/dto/create-item.dto';
 import { UpdateItemDto } from '../items/dto/update-item.dto';
 import { AuthorsService } from '../authors/authors.service';
+import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
 
 @Injectable()
 export class ItemsService {
@@ -155,6 +156,10 @@ export class ItemsService {
       const response = await this.itemRepository.query(
         'TRUNCATE TABLE item CASCADE;',
       );
+
+      // delete all files in the dir
+      deleteFiles('./public/assets/items/');
+
       return {
         message: 'Items data are wiped out',
         data: response,
@@ -167,13 +172,30 @@ export class ItemsService {
 
   async deleteItem(id: string) {
     try {
+      const item = await this.getItemById(id);
+      if (item.status === 404) {
+        return {
+          message: "Item doesn't exist",
+          data: item,
+          status: 404,
+        };
+      }
+
+      const imageName: string = item?.data?.image;
+      const screenshotsNames: string[] = item?.data?.screenshots;
       const response = await this.itemRepository.delete(id);
+
+      // delete the images related to the file
+      deleteFile('./public/assets/authors/' + imageName);
+
+      screenshotsNames.forEach((screenshot) => {
+        deleteFile('./public/assets/authors/' + screenshot);
+      });
+
       return {
-        message: response
-          ? 'Item has been deleted successfully'
-          : "Item doesn't exist",
+        message: 'Item has been deleted successfully',
         data: response,
-        status: response ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };

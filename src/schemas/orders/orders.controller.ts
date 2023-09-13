@@ -12,13 +12,14 @@ import {
   ValidationPipe,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
-import { ApiBody, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
+import { ApiBody, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { orderBody } from './dto/order-body';
 import { UpdateOrderDto } from './dto/update-order.dto';
 
+@ApiTags('Orders')
 @Controller('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
