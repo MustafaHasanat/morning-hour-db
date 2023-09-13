@@ -96,6 +96,7 @@ export class ItemsController {
       isBestSelling,
       primaryColor,
       authorId,
+      categoryId,
     } = createItemDto;
 
     const response: CustomResponseDto = await this.itemsService.createItem({
@@ -106,6 +107,7 @@ export class ItemsController {
       isBestSelling,
       primaryColor,
       authorId,
+      categoryId,
       image: image[0],
       screenshots,
     });
@@ -147,6 +149,7 @@ export class ItemsController {
       isBestSelling,
       primaryColor,
       authorId,
+      categoryId,
     } = updateItemDto;
 
     const response: CustomResponseDto = await this.itemsService.updateItem(id, {
@@ -157,6 +160,7 @@ export class ItemsController {
       isBestSelling,
       primaryColor,
       authorId,
+      categoryId,
       image: image[0],
       screenshots,
     });

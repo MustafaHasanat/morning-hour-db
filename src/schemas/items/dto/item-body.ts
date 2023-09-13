@@ -11,6 +11,7 @@ export const itemBody = {
       'isBestSelling',
       'primaryColor',
       'authorId',
+      'categoryId',
       'image',
       'screenshots',
     ],
@@ -22,6 +23,7 @@ export const itemBody = {
       isBestSelling: { type: 'boolean' },
       primaryColor: { type: 'string' },
       authorId: { type: 'string' },
+      categoryId: { type: 'string' },
       image: { type: 'string', format: 'binary' },
       screenshots: {
         type: 'array',
