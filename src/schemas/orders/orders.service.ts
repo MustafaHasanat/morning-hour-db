@@ -115,7 +115,7 @@ export class OrdersService {
   async deleteAllOrders() {
     try {
       const response = await this.orderRepository.query(
-        'TRUNCATE TABLE order CASCADE;',
+        `TRUNCATE TABLE "order" CASCADE;`,
       );
       return {
         message: 'Orders data are wiped out',

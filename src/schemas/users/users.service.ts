@@ -111,7 +111,7 @@ export class UsersService {
   async deleteAllUsers() {
     try {
       const response = await this.userRepository.query(
-        'TRUNCATE TABLE user CASCADE;',
+        `TRUNCATE TABLE "user" CASCADE;`,
       );
 
       // delete all files in the dir
