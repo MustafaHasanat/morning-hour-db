@@ -4,9 +4,14 @@ import { ItemsController } from './items.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Item } from './entities/item.entity';
 import { AuthorsModule } from '../authors/authors.module';
+import { CategoriesModule } from '../categories/categories.module';
 
 @Module({
-  imports: [forwardRef(() => AuthorsModule), TypeOrmModule.forFeature([Item])],
+  imports: [
+    forwardRef(() => AuthorsModule),
+    CategoriesModule,
+    TypeOrmModule.forFeature([Item]),
+  ],
   controllers: [ItemsController],
   providers: [ItemsService],
   exports: [ItemsService],

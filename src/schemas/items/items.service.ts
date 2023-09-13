@@ -7,6 +7,7 @@ import { CreateItemDto } from '../items/dto/create-item.dto';
 import { UpdateItemDto } from '../items/dto/update-item.dto';
 import { AuthorsService } from '../authors/authors.service';
 import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
+import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
 export class ItemsService {
@@ -16,6 +17,7 @@ export class ItemsService {
 
     @Inject(forwardRef(() => AuthorsService))
     private readonly authorsService: AuthorsService,
+    private readonly categoriesService: CategoriesService,
   ) {}
 
   async getItems(conditions: Record<string, any>) {
@@ -64,14 +66,17 @@ export class ItemsService {
 
   async createItem(createItemDto: CreateItemDto) {
     try {
-      // check the author
+      // check the author and category
       const author = await this.authorsService.getAuthorById(
         createItemDto.authorId,
       );
-      if (!author) {
+      const category = await this.categoriesService.getCategoryById(
+        createItemDto.categoryId,
+      );
+      if (!author || !category) {
         return {
           message: 'Error occurred',
-          data: 'Provided author does not exist',
+          data: `Provided ${!author ? 'author' : 'category'} does not exist`,
           status: 400,
         };
       }
