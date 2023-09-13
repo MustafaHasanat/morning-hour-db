@@ -186,10 +186,10 @@ export class ItemsService {
       const response = await this.itemRepository.delete(id);
 
       // delete the images related to the file
-      deleteFile('./public/assets/authors/' + imageName);
+      deleteFile('./public/assets/items/' + imageName);
 
       screenshotsNames.forEach((screenshot) => {
-        deleteFile('./public/assets/authors/' + screenshot);
+        deleteFile('./public/assets/items/' + screenshot);
       });
 
       return {
