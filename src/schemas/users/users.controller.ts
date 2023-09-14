@@ -74,6 +74,9 @@ export class UsersController {
       pricingRange,
       address,
       isAdmin,
+      recentVisited,
+      wishlist,
+      cart,
     } = createUserDto;
     const hashedPass = await hash(password, 12);
 
@@ -87,6 +90,9 @@ export class UsersController {
       address,
       isAdmin,
       avatar,
+      recentVisited,
+      wishlist,
+      cart,
     });
 
     return res.status(response.status).json(response);
@@ -113,6 +119,9 @@ export class UsersController {
       pricingRange,
       address,
       isAdmin,
+      recentVisited,
+      wishlist,
+      cart,
     } = updateUserDto;
     const response: CustomResponseDto = await this.usersService.updateUser(id, {
       userName,
@@ -123,6 +132,9 @@ export class UsersController {
       pricingRange,
       address,
       isAdmin,
+      recentVisited,
+      wishlist,
+      cart,
     });
 
     return res.status(response.status).json(response);

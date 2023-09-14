@@ -11,7 +11,13 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { ApiBody, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { ReviewsService } from './reviews.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
@@ -46,6 +52,7 @@ export class ReviewsController {
 
   @Post()
   @ApiOkResponse({ type: CreateReviewDto })
+  @ApiConsumes('multipart/form-data')
   @UsePipes(ValidationPipe)
   @ApiBody(reviewBody)
   async createReview(
@@ -65,6 +72,7 @@ export class ReviewsController {
 
   @Patch(':id')
   @ApiOkResponse({ type: UpdateReviewDto })
+  @ApiConsumes('multipart/form-data')
   @UsePipes(ValidationPipe)
   @ApiBody(reviewBody)
   async updateReview(

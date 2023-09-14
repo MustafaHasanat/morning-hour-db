@@ -3,6 +3,7 @@ import { Author } from 'src/schemas/authors/entities/author.entity';
 import { Category } from 'src/schemas/categories/entities/category.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
+import { User } from 'src/schemas/users/entities/user.entity';
 import {
   Column,
   Entity,
@@ -66,9 +67,15 @@ export class Item {
 
   // relations:
   @ManyToOne(() => Category, (category) => category.items)
+  @Column({
+    nullable: true,
+  })
   categoryId: string;
 
   @ManyToOne(() => Author, (author) => author.items)
+  @Column({
+    nullable: true,
+  })
   authorId: string;
 
   @ManyToMany(() => Order, (order) => order.items)
@@ -76,4 +83,13 @@ export class Item {
 
   @OneToMany(() => Review, (review) => review.itemId)
   reviews: string[];
+
+  @ManyToOne(() => User, (user) => user.recentVisited)
+  userRecentVisited: string;
+
+  @ManyToOne(() => User, (user) => user.wishlist)
+  userWishlist: string;
+
+  @ManyToOne(() => User, (user) => user.cart)
+  userCart: string;
 }

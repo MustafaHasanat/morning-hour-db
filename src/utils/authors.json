@@ -1,0 +1,38 @@
+[
+  {
+    "id": "d88be0e0-3296-4e8f-870f-cf19f5cdb760",
+    "name": "Jordan Belfort",
+    "brief": "Jordan Ross Belfort is an American entrepreneur, speaker, author, former stockbroker, and financial criminal. In 1999, he pleaded guilty to fraud and related crimes in connection with stock-market manipulation and running a boiler room as part of a penny-stock scam.",
+    "image": "image-2fbcf22e-3123-4f9e-97c1-f7ecbb975624.webp"
+  },
+  {
+    "id": "e2e646bc-b803-43f2-8c38-8f094d5366d0",
+    "name": "Mel Robbins",
+    "brief": "Melanie Robbins is an American podcast host, author, motivational speaker, and former lawyer. She is known for her TEDx talk, \\\"How to Stop Screwing Yourself Over\\\"; and her books, The 5 Second Rule and The High 5 Habit, as well as host of The Mel Robbins Podcast.",
+    "image": "image-3643498d-3396-4b85-a6f6-735cf0165755.jpg"
+  },
+  {
+    "id": "3be086cf-143b-47de-aee9-a62e93a704f4",
+    "name": "Robert Kiyosaki",
+    "brief": "Robert Toru Kiyosaki is an American entrepreneur, businessman, and author. Kiyosaki is the founder of Rich Global LLC and the Rich Dad Company, a private financial education company that provides personal finance and business education to people through books and videos.",
+    "image": "image-73c77fc5-f8f8-4e67-a46a-c706bd2a8630.jpg"
+  },
+  {
+    "id": "a85f52eb-ec74-467a-bf1d-652d88cf4f9c",
+    "name": "Mark Manson",
+    "brief": "Mark Manson is an American self-help author and blogger. As of 2022 he has authored or co-authored four books, three of which, The Subtle Art of Not Giving a Fuck, Everything Is F*cked: A Book About Hope, and Will, were The New York Times bestsellers",
+    "image": "image-3ad11997-791b-453a-9ca9-e85139ab9245.jpg"
+  },
+  {
+    "id": "299d6676-059c-4893-a139-b4c6ba956f95",
+    "name": "Robin Sharma",
+    "brief": "Robin Sharma is a Canadian writer, best known for his The Monk Who Sold His Ferrari book series. Sharma worked as a litigation lawyer until age 25, when he self-published MegaLiving, a book on stress management and spirituality.",
+    "image": "image-c1032050-9f46-4aff-88cf-3c8e5b2c8c7c.jpg"
+  },
+  {
+    "id": "4f6bb98e-8a5a-4304-93a9-3de30444ec05",
+    "name": "George Clason",
+    "brief": "George Samuel Clason was an American author. He is most often associated with his book The Richest Man in Babylon which was first published in 1926.",
+    "image": "image-29850795-2b1d-40d5-8b7c-df2bb875bb42.jpg"
+  }
+]

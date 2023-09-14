@@ -3,6 +3,7 @@ import { IsNotEmpty } from 'class-validator';
 import { LoginUserDto } from './login-user.dto';
 import { UserGender } from 'src/types/user-gender.type';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
+import { UserCart } from 'src/types/user-cart';
 
 export class CreateUserDto extends PartialType(LoginUserDto) {
   @IsNotEmpty()
@@ -35,4 +36,18 @@ export class CreateUserDto extends PartialType(LoginUserDto) {
     example: 'url',
   })
   avatar?: Express.Multer.File;
+
+  @ApiProperty({ example: ['d996b291-ea4e-486d-a2a3-f79676bfe13c'] })
+  recentVisited?: string[];
+
+  @ApiProperty({ example: ['d996b291-ea4e-486d-a2a3-f79676bfe13c'] })
+  wishlist?: string[];
+
+  @ApiProperty({
+    example: {
+      itemId: 'd996b291-ea4e-486d-a2a3-f79676bfe13c',
+      quantity: 3,
+    },
+  })
+  cart?: UserCart[];
 }
