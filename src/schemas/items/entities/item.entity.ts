@@ -20,6 +20,7 @@ export class Item {
   @MinLength(3)
   @Column({
     nullable: false,
+    unique: true,
     default: 'item title',
   })
   title: string;

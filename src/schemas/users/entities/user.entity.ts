@@ -11,6 +11,7 @@ export class User {
 
   @Column({
     nullable: false,
+    unique: true,
   })
   userName: string;
 
@@ -27,6 +28,7 @@ export class User {
 
   @Column({
     nullable: true,
+    unique: true,
   })
   phoneNumber: string;
 

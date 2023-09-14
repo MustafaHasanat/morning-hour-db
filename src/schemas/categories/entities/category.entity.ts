@@ -10,6 +10,7 @@ export class Category {
   @MinLength(3)
   @Column({
     nullable: false,
+    unique: true,
     default: 'category title',
   })
   title: string;

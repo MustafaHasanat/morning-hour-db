@@ -10,6 +10,7 @@ export class Author {
   @MinLength(3)
   @Column({
     nullable: false,
+    unique: true,
     default: 'Jack',
   })
   name: string;
