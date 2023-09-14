@@ -1,6 +1,9 @@
 export const userBody = {
+  consumes: ['multipart/form-data'],
+  produces: ['application/json'],
   schema: {
     type: 'object',
+    required: ['userName', 'email', 'password'],
     properties: {
       userName: { type: 'string' },
       email: { type: 'string' },
