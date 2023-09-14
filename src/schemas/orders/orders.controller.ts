@@ -13,7 +13,13 @@ import {
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
-import { ApiBody, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBody,
+  ApiConsumes,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { Response } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { orderBody } from './dto/order-body';
@@ -46,6 +52,7 @@ export class OrdersController {
 
   @Post()
   @ApiOkResponse({ type: CreateOrderDto })
+  @ApiConsumes('multipart/form-data')
   @UsePipes(ValidationPipe)
   @ApiBody(orderBody)
   async createOrder(
@@ -63,6 +70,7 @@ export class OrdersController {
 
   @Patch(':id')
   @ApiOkResponse({ type: UpdateOrderDto })
+  @ApiConsumes('multipart/form-data')
   @UsePipes(ValidationPipe)
   @ApiBody(orderBody)
   async updateOrder(

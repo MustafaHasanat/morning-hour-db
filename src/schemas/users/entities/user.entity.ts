@@ -1,3 +1,4 @@
+import { Item } from 'src/schemas/items/entities/item.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
 import { UserGender } from 'src/types/user-gender.type';
@@ -71,25 +72,33 @@ export class User {
 
   // relations
 
-  // @OneToMany(() => Item, (item) => item.user)
-  // recentVisited: Item[];
-
-  // @OneToMany(() => Item, (item) => item.user)
-  // wishlist: Item[];
-
-  // @OneToMany(() => Item, (item) => item.user)
-  // @Column({
-  //   type: 'simple-json',
-  //   nullable: true,
-  // })
-  // cart: {
-  //   item: Item;
-  //   quantity: number;
-  // }[];
-
   @OneToMany(() => Order, (order) => order.userId)
   orders: string[];
 
   @OneToMany(() => Review, (review) => review.userId)
   reviews: string[];
+
+  @OneToMany(() => Item, (item) => item.userRecentVisited)
+  @Column({
+    type: 'simple-array',
+    nullable: true,
+  })
+  recentVisited: string[];
+
+  @OneToMany(() => Item, (item) => item.userWishlist)
+  @Column({
+    type: 'simple-array',
+    nullable: true,
+  })
+  wishlist: string[];
+
+  @OneToMany(() => Item, (item) => item.userCart)
+  @Column({
+    type: 'simple-json',
+    nullable: true,
+  })
+  cart: {
+    itemId: string;
+    quantity: number;
+  }[];
 }
