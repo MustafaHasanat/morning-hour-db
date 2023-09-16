@@ -67,7 +67,7 @@ export class CategoriesService {
     try {
       const newCategory = this.categoryRepository.create({
         ...createCategoryDto,
-        image: createCategoryDto.image.filename && '',
+        image: createCategoryDto.image.filename || '',
       });
       const response = await this.categoryRepository.save(newCategory);
 
@@ -93,7 +93,7 @@ export class CategoriesService {
         },
         {
           ...updateCategoryDto,
-          image: updateCategoryDto.image.filename && '',
+          image: updateCategoryDto.image.filename || '',
         },
       );
 

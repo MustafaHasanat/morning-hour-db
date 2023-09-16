@@ -83,7 +83,7 @@ export class UsersService {
 
       const newUser = this.userRepository.create({
         ...createUserDto,
-        avatar: createUserDto.avatar?.filename && '',
+        avatar: createUserDto.avatar?.filename || '',
       });
       const response = await this.userRepository.save(newUser);
 
@@ -118,7 +118,7 @@ export class UsersService {
         },
         {
           ...updateUserDto,
-          avatar: updateUserDto.avatar?.filename && '',
+          avatar: updateUserDto.avatar?.filename || '',
         },
       );
 

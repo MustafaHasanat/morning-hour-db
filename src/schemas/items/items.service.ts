@@ -84,9 +84,9 @@ export class ItemsService {
       // create the item
       const newItem = this.itemRepository.create({
         ...createItemDto,
-        image: createItemDto.image.filename && '',
+        image: createItemDto.image.filename || '',
         screenshots: createItemDto.screenshots.map(
-          (screenshot) => screenshot.filename && '',
+          (screenshot) => screenshot.filename || '',
         ),
       });
       const response = await this.itemRepository.save(newItem);
@@ -129,9 +129,9 @@ export class ItemsService {
         },
         {
           ...updateItemDto,
-          image: updateItemDto.image.filename && '',
+          image: updateItemDto.image.filename || '',
           screenshots: updateItemDto.screenshots.map(
-            (screenshot) => screenshot.filename && '',
+            (screenshot) => screenshot.filename || '',
           ),
         },
       );
