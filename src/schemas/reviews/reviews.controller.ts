@@ -25,6 +25,7 @@ import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { reviewBody } from './dto/review-body';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Reviews')
 @Controller('reviews')
@@ -33,6 +34,7 @@ export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
   @Get()
+  @Public()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getReviews(
     @Query() conditions: Record<string, any>,
@@ -45,6 +47,7 @@ export class ReviewsController {
   }
 
   @Get(':id')
+  @Public()
   async getReviewById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.reviewsService.getReviewById(id);

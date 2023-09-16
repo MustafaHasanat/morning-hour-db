@@ -29,6 +29,7 @@ import { UpdateCategoryDto } from './dto/update-category.dto';
 import { categoryBody } from './dto/category-body';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Categories')
 @Controller('categories')
@@ -37,6 +38,7 @@ export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
+  @Public()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getCategories(
     @Query() conditions: Record<string, any>,
@@ -49,6 +51,7 @@ export class CategoriesController {
   }
 
   @Get(':id')
+  @Public()
   async getCategoryById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.categoriesService.getCategoryById(id);
@@ -57,6 +60,7 @@ export class CategoriesController {
   }
 
   @Get('assets/:imageName')
+  @Public()
   async downloadImage(
     @Param('imageName') imageName: string,
     @Res() res: Response,

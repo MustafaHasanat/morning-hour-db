@@ -29,6 +29,7 @@ import { UpdateAuthorDto } from './dto/update-author.dto';
 import { authorBody } from './dto/author-body';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Authors')
 @Controller('authors')
@@ -37,6 +38,7 @@ export class AuthorsController {
   constructor(private readonly authorsService: AuthorsService) {}
 
   @Get()
+  @Public()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getAuthors(
     @Query() conditions: Record<string, any>,
@@ -49,6 +51,7 @@ export class AuthorsController {
   }
 
   @Get(':id')
+  @Public()
   async getAuthorById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.authorsService.getAuthorById(id);
@@ -57,6 +60,7 @@ export class AuthorsController {
   }
 
   @Get('assets/:imageName')
+  @Public()
   async downloadImage(
     @Param('imageName') imageName: string,
     @Res() res: Response,

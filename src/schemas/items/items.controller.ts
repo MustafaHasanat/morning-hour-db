@@ -30,6 +30,7 @@ import { Response } from 'express';
 import { itemBody } from './dto/item-body';
 import { CustomBadRequestFilter } from 'src/decorators/custom-bad-request-filter.decorator';
 import { CreateItemDto } from './dto/create-item.dto';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Items')
 @Controller('items')
@@ -39,6 +40,7 @@ export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
+  @Public()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getItems(
     @Query() conditions: Record<string, any>,
@@ -51,6 +53,7 @@ export class ItemsController {
   }
 
   @Get(':id')
+  @Public()
   async getItemById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto = await this.itemsService.getItemById(id);
 
@@ -58,6 +61,7 @@ export class ItemsController {
   }
 
   @Get('assets/:imageName')
+  @Public()
   async downloadImage(
     @Param('imageName') imageName: string,
     @Res() res: Response,
