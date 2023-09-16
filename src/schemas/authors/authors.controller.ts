@@ -20,8 +20,9 @@ import {
   ApiOkResponse,
   ApiQuery,
   ApiTags,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
-import { storeLocalFile } from 'src/utils/storage';
+import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
@@ -31,6 +32,7 @@ import { Response } from 'express';
 
 @ApiTags('Authors')
 @Controller('authors')
+@ApiBearerAuth()
 export class AuthorsController {
   constructor(private readonly authorsService: AuthorsService) {}
 

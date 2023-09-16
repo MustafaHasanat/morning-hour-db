@@ -5,7 +5,8 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
+import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
+import { join } from 'path';
 
 @Injectable()
 export class UsersService {
@@ -14,21 +15,21 @@ export class UsersService {
     private readonly userRepository: Repository<User>,
   ) {}
 
-  async getUsers(conditions: Record<string, any>) {
+  async getUsers(conditions: Record<string, any>, withPass: boolean = false) {
     try {
       const response = await this.userRepository.findBy(conditions);
 
       // remove the password from all the users before sending response
-      const deprecatedPassUsers = response.map((user) => {
+      const updatedUsers = response.map((user) => {
         const { password, ...rest } = user;
-        return rest;
+        return withPass ? user : rest;
       });
 
       return {
         message: response.length
           ? 'Users have been found'
           : 'Users list is empty',
-        data: deprecatedPassUsers,
+        data: updatedUsers,
         status: 200,
       };
     } catch (error) {
@@ -39,8 +40,35 @@ export class UsersService {
   async getUserById(id: string) {
     try {
       const response = await this.userRepository.findOneBy({ id });
+
+      if (!response) {
+        return {
+          message: "User doesn't exist",
+          data: response,
+          status: 404,
+        };
+      }
+
+      // remove the password from the user before sending response
+      const { password, ...deprecatedPassUser } = response;
+
       return {
-        message: response ? 'User has been found' : "User doesn't exist",
+        message: 'User has been found',
+        data: deprecatedPassUser,
+        status: 200,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
+  }
+
+  downloadImage(imageName: string) {
+    try {
+      const response = join(process.cwd(), 'public/assets/users/' + imageName);
+      return {
+        message: response
+          ? 'Image returned successfully'
+          : "User doesn't exist",
         data: response,
         status: response ? 200 : 404,
       };
@@ -51,9 +79,11 @@ export class UsersService {
 
   async createUser(createUserDto: CreateUserDto) {
     try {
+      console.log(createUserDto);
+
       const newUser = this.userRepository.create({
         ...createUserDto,
-        avatar: createUserDto.avatar.filename,
+        avatar: createUserDto.avatar?.filename && '',
       });
       const response = await this.userRepository.save(newUser);
 
@@ -65,9 +95,7 @@ export class UsersService {
     } catch (error) {
       return {
         message: 'Error occurred',
-        data: !createUserDto.avatar?.filename
-          ? 'You must provide a valid avatar image'
-          : error,
+        data: error,
         status: 500,
       };
     }
@@ -90,7 +118,7 @@ export class UsersService {
         },
         {
           ...updateUserDto,
-          avatar: updateUserDto.avatar.filename,
+          avatar: updateUserDto.avatar?.filename && '',
         },
       );
 

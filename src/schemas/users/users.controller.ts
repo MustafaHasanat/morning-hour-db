@@ -21,21 +21,25 @@ import {
   ApiOkResponse,
   ApiQuery,
   ApiTags,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { hash } from 'bcrypt';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
-import { storeLocalFile } from 'src/utils/storage';
+import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { userBody } from './dto/user-body';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { Public } from 'src/decorators/public.decorator';
 
 @ApiTags('Users')
 @Controller('users')
+@ApiBearerAuth()
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @Public()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getUsers(
     @Query() conditions: Record<string, any>,
@@ -48,13 +52,23 @@ export class UsersController {
   }
 
   @Get(':id')
+  @Public()
   async getUserById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto = await this.usersService.getUserById(id);
 
     return res.status(response.status).json(response);
   }
 
+  @Get('assets/:imageName')
+  async downloadImage(
+    @Param('imageName') imageName: string,
+    @Res() res: Response,
+  ) {
+    return res.sendFile(this.usersService.downloadImage(imageName).data);
+  }
+
   @Post()
+  @Public()
   @ApiOkResponse({ type: CreateUserDto })
   @UsePipes(ValidationPipe)
   @ApiConsumes('multipart/form-data')
@@ -73,10 +87,7 @@ export class UsersController {
       gender,
       pricingRange,
       address,
-      isAdmin,
-      recentVisited,
-      wishlist,
-      cart,
+      role,
     } = createUserDto;
     const hashedPass = await hash(password, 12);
 
@@ -88,11 +99,8 @@ export class UsersController {
       gender,
       pricingRange,
       address,
-      isAdmin,
+      role,
       avatar,
-      recentVisited,
-      wishlist,
-      cart,
     });
 
     return res.status(response.status).json(response);
@@ -102,12 +110,12 @@ export class UsersController {
   @ApiOkResponse({ type: UpdateUserDto })
   @UsePipes(ValidationPipe)
   @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', storeLocalFile('users')))
+  @UseInterceptors(FileInterceptor('avatar', storeLocalFile('users')))
   @ApiBody(userBody)
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-    @UploadedFile() image: Express.Multer.File,
+    @UploadedFile() avatar: Express.Multer.File,
     @Res() res: Response,
   ) {
     const {
@@ -118,7 +126,7 @@ export class UsersController {
       gender,
       pricingRange,
       address,
-      isAdmin,
+      role,
       recentVisited,
       wishlist,
       cart,
@@ -127,11 +135,12 @@ export class UsersController {
       userName,
       email,
       password,
+      avatar,
       phoneNumber,
       gender,
       pricingRange,
       address,
-      isAdmin,
+      role,
       recentVisited,
       wishlist,
       cart,
