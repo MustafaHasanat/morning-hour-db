@@ -69,7 +69,7 @@ export class AuthorsService {
     try {
       const newAuthor = this.authorRepository.create({
         ...createAuthorDto,
-        image: createAuthorDto.image.filename && '',
+        image: createAuthorDto.image.filename || '',
       });
       const response = await this.authorRepository.save(newAuthor);
 
@@ -95,7 +95,7 @@ export class AuthorsService {
         },
         {
           ...updateAuthorDto,
-          image: updateAuthorDto.image.filename && '',
+          image: updateAuthorDto.image.filename || '',
         },
       );
 
