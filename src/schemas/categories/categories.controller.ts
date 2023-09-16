@@ -20,8 +20,9 @@ import {
   ApiOkResponse,
   ApiQuery,
   ApiTags,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
-import { storeLocalFile } from 'src/utils/storage';
+import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -31,6 +32,7 @@ import { Response } from 'express';
 
 @ApiTags('Categories')
 @Controller('categories')
+@ApiBearerAuth()
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 

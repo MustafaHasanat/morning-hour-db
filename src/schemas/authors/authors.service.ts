@@ -6,7 +6,7 @@ import { Author } from './entities/author.entity';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { ItemsService } from '../items/items.service';
-import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
+import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 
 @Injectable()
 export class AuthorsService {
@@ -69,7 +69,7 @@ export class AuthorsService {
     try {
       const newAuthor = this.authorRepository.create({
         ...createAuthorDto,
-        image: createAuthorDto.image.filename,
+        image: createAuthorDto.image.filename && '',
       });
       const response = await this.authorRepository.save(newAuthor);
 
@@ -81,9 +81,7 @@ export class AuthorsService {
     } catch (error) {
       return {
         message: 'Error occurred',
-        data: !createAuthorDto.image?.filename
-          ? 'You must provide a valid image'
-          : error,
+        data: error,
         status: 500,
       };
     }
@@ -97,7 +95,7 @@ export class AuthorsService {
         },
         {
           ...updateAuthorDto,
-          image: updateAuthorDto.image.filename,
+          image: updateAuthorDto.image.filename && '',
         },
       );
 
@@ -113,9 +111,7 @@ export class AuthorsService {
     } catch (error) {
       return {
         message: 'Error occurred',
-        data: !updateAuthorDto.image?.filename
-          ? 'You must provide a valid image'
-          : error,
+        data: error,
         status: 500,
       };
     }

@@ -10,10 +10,11 @@ import { UsersModule } from './schemas/users/users.module';
 import { AuthModule } from './schemas/auth/auth.module';
 import entities from './entities';
 import { JwtModule } from '@nestjs/jwt';
-// import { APP_GUARD } from '@nestjs/core';
-// import { AuthGuard } from './schemas/auth/auth.guard';
+import { APP_GUARD } from '@nestjs/core';
+import { AuthGuard } from './schemas/auth/auth.guard';
 import { OrdersModule } from './schemas/orders/orders.module';
 import { ReviewsModule } from './schemas/reviews/review.module';
+import constants from 'src/utils/constants/auth.constants';
 
 @Module({
   imports: [
@@ -35,7 +36,7 @@ import { ReviewsModule } from './schemas/reviews/review.module';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: '3600s' },
+      signOptions: { expiresIn: constants.ONE_HOUR },
     }),
     AuthModule,
     AuthorsModule,
@@ -48,10 +49,10 @@ import { ReviewsModule } from './schemas/reviews/review.module';
   controllers: [AppController],
   providers: [
     AppService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: AuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: AuthGuard,
+    },
   ],
 })
 export class AppModule {}

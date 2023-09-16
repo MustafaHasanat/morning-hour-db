@@ -21,10 +21,11 @@ import {
   ApiOkResponse,
   ApiQuery,
   ApiTags,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
-import { storeLocalFile } from 'src/utils/storage';
+import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { Response } from 'express';
 import { itemBody } from './dto/item-body';
 import { CustomBadRequestFilter } from 'src/decorators/custom-bad-request-filter.decorator';
@@ -32,6 +33,7 @@ import { CreateItemDto } from './dto/create-item.dto';
 
 @ApiTags('Items')
 @Controller('items')
+@ApiBearerAuth()
 @UseFilters(CustomBadRequestFilter)
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}

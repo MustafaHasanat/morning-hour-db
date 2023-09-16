@@ -5,7 +5,7 @@ import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
+import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 
 @Injectable()
 export class CategoriesService {
@@ -67,7 +67,7 @@ export class CategoriesService {
     try {
       const newCategory = this.categoryRepository.create({
         ...createCategoryDto,
-        image: createCategoryDto.image.filename,
+        image: createCategoryDto.image.filename && '',
       });
       const response = await this.categoryRepository.save(newCategory);
 
@@ -79,9 +79,7 @@ export class CategoriesService {
     } catch (error) {
       return {
         message: 'Error occurred',
-        data: !createCategoryDto.image?.filename
-          ? 'You must provide a valid image'
-          : error,
+        data: error,
         status: 500,
       };
     }
@@ -95,7 +93,7 @@ export class CategoriesService {
         },
         {
           ...updateCategoryDto,
-          image: updateCategoryDto.image.filename,
+          image: updateCategoryDto.image.filename && '',
         },
       );
 
@@ -111,9 +109,7 @@ export class CategoriesService {
     } catch (error) {
       return {
         message: 'Error occurred',
-        data: !updateCategoryDto.image?.filename
-          ? 'You must provide a valid image'
-          : error,
+        data: error,
         status: 500,
       };
     }

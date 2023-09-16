@@ -19,6 +19,7 @@ import {
   ApiOkResponse,
   ApiQuery,
   ApiTags,
+  ApiBearerAuth,
 } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -27,6 +28,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 
 @ApiTags('Orders')
 @Controller('orders')
+@ApiBearerAuth()
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 

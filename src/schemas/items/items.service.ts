@@ -6,7 +6,7 @@ import { join } from 'path';
 import { CreateItemDto } from '../items/dto/create-item.dto';
 import { UpdateItemDto } from '../items/dto/update-item.dto';
 import { AuthorsService } from '../authors/authors.service';
-import { deleteFile, deleteFiles } from 'src/utils/deleteFiles';
+import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 import { CategoriesService } from '../categories/categories.service';
 
 @Injectable()
@@ -84,9 +84,9 @@ export class ItemsService {
       // create the item
       const newItem = this.itemRepository.create({
         ...createItemDto,
-        image: createItemDto.image.filename,
+        image: createItemDto.image.filename && '',
         screenshots: createItemDto.screenshots.map(
-          (screenshot) => screenshot.filename,
+          (screenshot) => screenshot.filename && '',
         ),
       });
       const response = await this.itemRepository.save(newItem);
@@ -102,9 +102,7 @@ export class ItemsService {
     } catch (error) {
       return {
         message: 'Error occurred',
-        data: !createItemDto.image?.filename
-          ? 'You must provide a valid image'
-          : error,
+        data: error,
         status: 500,
       };
     }
@@ -131,9 +129,9 @@ export class ItemsService {
         },
         {
           ...updateItemDto,
-          image: updateItemDto.image.filename,
+          image: updateItemDto.image.filename && '',
           screenshots: updateItemDto.screenshots.map(
-            (screenshot) => screenshot.filename,
+            (screenshot) => screenshot.filename && '',
           ),
         },
       );

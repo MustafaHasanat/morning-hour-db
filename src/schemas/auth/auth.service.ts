@@ -15,17 +15,19 @@ export class AuthService {
   ) {}
 
   async logIn(email: string, password: string) {
-    const user = await this.usersService.getUsers({ email })[0];
+    const response = await this.usersService.getUsers({ email }, true);
 
-    if (!user) {
-      throw new BadRequestException('Invalid credentials');
+    if (!response) {
+      throw new BadRequestException('Invalid email');
     }
 
-    if (!(await compare(password, user.password))) {
-      throw new UnauthorizedException('Unauthorized !!!');
+    const user = response.data[0];
+
+    if (!(await compare(password, user?.password))) {
+      throw new UnauthorizedException('Invalid password');
     }
 
-    const payload = { sub: user.id, username: user.userName };
+    const payload = { sub: user?.id, username: user?.userName };
 
     return {
       access_token: await this.jwtService.signAsync(payload),

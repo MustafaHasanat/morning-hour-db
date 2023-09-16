@@ -22,7 +22,7 @@ async function bootstrap() {
 
   // allow the front end to sign in and reach the data
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: process.env.FRONTEND_URLS.split(','),
     credentials: true,
   });
 

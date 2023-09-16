@@ -3,6 +3,7 @@ import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
 import { UserGender } from 'src/types/user-gender.type';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
+import { UserRole } from 'src/types/user-role';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -37,7 +38,7 @@ export class User {
     type: 'enum',
     enum: UserGender,
     nullable: true,
-    default: UserGender.MALE,
+    default: UserGender.NOT_SPECIFIED,
   })
   gender: UserGender;
 
@@ -56,8 +57,13 @@ export class User {
   })
   address: string;
 
-  @Column({ nullable: false, default: false })
-  isAdmin: boolean;
+  @Column({
+    type: 'enum',
+    enum: UserRole,
+    nullable: true,
+    default: UserRole.MEMBER,
+  })
+  role: UserRole;
 
   // @Column({
   //   nullable: true,
