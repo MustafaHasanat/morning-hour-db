@@ -11,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginUserDto } from '../users/dto/login-user.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { AuthGuard } from './auth.guard';
+import { UserAuthGuard } from './user-auth.guard';
 import { Public } from 'src/decorators/public.decorator';
 import { Request } from 'express';
 
@@ -29,7 +29,7 @@ export class AuthController {
     return this.authService.logIn(email, password);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(UserAuthGuard)
   @Get('profile')
   getProfile(@Req() req: Request) {
     return req.user;

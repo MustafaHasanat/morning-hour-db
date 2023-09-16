@@ -11,7 +11,7 @@ import { AuthModule } from './schemas/auth/auth.module';
 import entities from './entities';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
-import { AuthGuard } from './schemas/auth/auth.guard';
+import { UserAuthGuard } from './schemas/auth/user-auth.guard';
 import { OrdersModule } from './schemas/orders/orders.module';
 import { ReviewsModule } from './schemas/reviews/review.module';
 import constants from 'src/utils/constants/auth.constants';
@@ -38,6 +38,7 @@ import constants from 'src/utils/constants/auth.constants';
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: constants.ONE_HOUR },
     }),
+    // PassportModule.register({ defaultStrategy: 'google' }),
     AuthModule,
     AuthorsModule,
     CategoriesModule,
@@ -51,7 +52,7 @@ import constants from 'src/utils/constants/auth.constants';
     AppService,
     {
       provide: APP_GUARD,
-      useClass: AuthGuard,
+      useClass: UserAuthGuard,
     },
   ],
 })
