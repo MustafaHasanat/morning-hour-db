@@ -21,6 +21,7 @@ import {
   ApiQuery,
   ApiTags,
   ApiBearerAuth,
+  ApiHeader,
 } from '@nestjs/swagger';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { AuthorsService } from './authors.service';
@@ -34,12 +35,22 @@ import { Public } from 'src/decorators/public.decorator';
 @ApiTags('Authors')
 @Controller('authors')
 @ApiBearerAuth()
+@ApiHeader({
+  name: 'Custom-Header',
+  description: 'A custom header added to all requests',
+  required: true,
+})
 export class AuthorsController {
   constructor(private readonly authorsService: AuthorsService) {}
 
   @Get()
   @Public()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Bearer token for authentication',
+    required: true, // Set to true if the header is required
+  })
   async getAuthors(
     @Query() conditions: Record<string, any>,
     @Res() res: Response,

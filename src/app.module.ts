@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -15,6 +15,7 @@ import { UserAuthGuard } from './schemas/auth/user-auth.guard';
 import { OrdersModule } from './schemas/orders/orders.module';
 import { ReviewsModule } from './schemas/reviews/review.module';
 import constants from 'src/utils/constants/auth.constants';
+import { BackendGuard } from './middlewares/backend.guard';
 
 @Module({
   imports: [
@@ -56,4 +57,11 @@ import constants from 'src/utils/constants/auth.constants';
     },
   ],
 })
-export class AppModule {}
+export class AppModule {
+  // Apply the guard middleware to all routes in this app to prevent unauthorized requests
+  configure(consumer: MiddlewareConsumer) {
+    consumer
+      .apply(BackendGuard)
+      .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
+}

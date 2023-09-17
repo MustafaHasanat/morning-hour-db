@@ -23,7 +23,6 @@ import {
   ApiTags,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-import { hash } from 'bcrypt';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
@@ -89,12 +88,10 @@ export class UsersController {
       address,
       role,
     } = createUserDto;
-    const hashedPass = await hash(password, 12);
-
     const response: CustomResponseDto = await this.usersService.createUser({
       userName,
       email,
-      password: hashedPass,
+      password,
       phoneNumber,
       gender,
       pricingRange,
