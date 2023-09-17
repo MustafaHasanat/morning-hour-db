@@ -7,6 +7,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 import { join } from 'path';
+import { hash } from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -79,11 +80,12 @@ export class UsersService {
 
   async createUser(createUserDto: CreateUserDto) {
     try {
-      console.log(createUserDto);
+      const hashedPass = await hash(createUserDto.password, 12);
 
       const newUser = this.userRepository.create({
         ...createUserDto,
         avatar: createUserDto.avatar?.filename || '',
+        password: hashedPass,
       });
       const response = await this.userRepository.save(newUser);
 

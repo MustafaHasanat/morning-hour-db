@@ -18,7 +18,12 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api', app, document);
+
+  SwaggerModule.setup('api', app, document, {
+    swaggerOptions: {
+      tryItOutEnabled: true,
+    },
+  });
 
   // allow the front end to sign in and reach the data
   app.enableCors({
