@@ -1,11 +1,8 @@
 import {
   Body,
-  Controller,
   Get,
   Param,
   Post,
-  UsePipes,
-  ValidationPipe,
   Delete,
   Patch,
   UseInterceptors,
@@ -14,14 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiQuery } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
@@ -29,10 +19,10 @@ import { Response } from 'express';
 import { itemBody } from './dto/item-body';
 import { CreateItemDto } from './dto/create-item.dto';
 import { Public } from 'src/decorators/public.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 
-@ApiTags('Items')
-@Controller('items')
-@ApiBearerAuth()
+@ControllerWrapper('items')
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
@@ -67,10 +57,7 @@ export class ItemsController {
   }
 
   @Post()
-  @ApiOkResponse({ type: CreateItemDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
-  @ApiBody(itemBody)
+  @CreateUpdateWrapper(CreateItemDto, itemBody)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -119,10 +106,7 @@ export class ItemsController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: CreateItemDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
-  @ApiBody(itemBody)
+  @CreateUpdateWrapper(CreateItemDto, itemBody)
   @UseInterceptors(
     FileFieldsInterceptor(
       [

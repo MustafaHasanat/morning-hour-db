@@ -11,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { LoginUserDto } from '../users/dto/login-user.dto';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
-import { UserAuthGuard } from './user-auth.guard';
+import { UserAuthGuard } from '../../guards/user-auth.guard';
 import { Public } from 'src/decorators/public.decorator';
 import { Request } from 'express';
 

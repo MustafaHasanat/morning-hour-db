@@ -1,6 +1,5 @@
 import {
   Body,
-  Controller,
   Delete,
   Get,
   Param,
@@ -8,27 +7,18 @@ import {
   Post,
   Query,
   Res,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { orderBody } from './dto/order-body';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 
-@ApiTags('Orders')
-@Controller('orders')
-@ApiBearerAuth()
+@ControllerWrapper('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
@@ -53,10 +43,7 @@ export class OrdersController {
   }
 
   @Post()
-  @ApiOkResponse({ type: CreateOrderDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(orderBody)
+  @CreateUpdateWrapper(CreateOrderDto, orderBody)
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @Res() res: Response,
@@ -71,10 +58,7 @@ export class OrdersController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateOrderDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(orderBody)
+  @CreateUpdateWrapper(CreateOrderDto, orderBody)
   async updateOrder(
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,

@@ -1,11 +1,8 @@
 import {
   Body,
-  Controller,
   Get,
   Param,
   Post,
-  UsePipes,
-  ValidationPipe,
   Delete,
   Patch,
   Res,
@@ -14,14 +11,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiQuery } from '@nestjs/swagger';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -30,10 +20,10 @@ import { categoryBody } from './dto/category-body';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
 import { Public } from 'src/decorators/public.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 
-@ApiTags('Categories')
-@Controller('categories')
-@ApiBearerAuth()
+@ControllerWrapper('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
@@ -69,11 +59,8 @@ export class CategoriesController {
   }
 
   @Post()
-  @ApiOkResponse({ type: CreateCategoryDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @CreateUpdateWrapper(CreateCategoryDto, categoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
-  @ApiBody(categoryBody)
   async createCategory(
     @UploadedFile() image: Express.Multer.File,
     @Body() createCategoryDto: CreateCategoryDto,
@@ -90,11 +77,8 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateCategoryDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @CreateUpdateWrapper(CreateCategoryDto, categoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
-  @ApiBody(categoryBody)
   async updateCategory(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,

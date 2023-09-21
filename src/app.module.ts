@@ -11,11 +11,12 @@ import { AuthModule } from './schemas/auth/auth.module';
 import entities from './entities';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
-import { UserAuthGuard } from './schemas/auth/user-auth.guard';
+import { UserAuthGuard } from './guards/user-auth.guard';
 import { OrdersModule } from './schemas/orders/orders.module';
 import { ReviewsModule } from './schemas/reviews/review.module';
 import constants from 'src/utils/constants/auth.constants';
-import { BackendGuard } from './middlewares/backend.guard';
+import { BackendGuard } from './guards/backend.guard';
+import { UserTypesModule } from './schemas/user-type/user-types.module';
 
 @Module({
   imports: [
@@ -44,24 +45,25 @@ import { BackendGuard } from './middlewares/backend.guard';
     AuthorsModule,
     CategoriesModule,
     ItemsModule,
-    UsersModule,
     OrdersModule,
     ReviewsModule,
+    UsersModule,
+    UserTypesModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    {
-      provide: APP_GUARD,
-      useClass: UserAuthGuard,
-    },
+    // {
+    //   provide: APP_GUARD,
+    //   useClass: UserAuthGuard,
+    // },
   ],
 })
 export class AppModule {
   // Apply the guard middleware to all routes in this app to prevent unauthorized requests
-  configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(BackendGuard)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
-  }
+  // configure(consumer: MiddlewareConsumer) {
+  //   consumer
+  //     .apply(BackendGuard)
+  //     .forRoutes({ path: '*', method: RequestMethod.ALL });
+  // }
 }

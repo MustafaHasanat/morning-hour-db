@@ -1,6 +1,5 @@
 import {
   Body,
-  Controller,
   Delete,
   Get,
   Param,
@@ -10,19 +9,10 @@ import {
   Res,
   UploadedFile,
   UseInterceptors,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiQuery } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
@@ -30,10 +20,10 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { userBody } from './dto/user-body';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Public } from 'src/decorators/public.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 
-@ApiTags('Users')
-@Controller('users')
-@ApiBearerAuth()
+@ControllerWrapper('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
@@ -68,11 +58,8 @@ export class UsersController {
 
   @Post()
   @Public()
-  @ApiOkResponse({ type: CreateUserDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @CreateUpdateWrapper(CreateUserDto, userBody)
   @UseInterceptors(FileInterceptor('avatar', storeLocalFile('users')))
-  @ApiBody(userBody)
   async createUser(
     @UploadedFile() avatar: Express.Multer.File,
     @Body() createUserDto: CreateUserDto,
@@ -104,11 +91,8 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateUserDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @CreateUpdateWrapper(UpdateUserDto, userBody)
   @UseInterceptors(FileInterceptor('avatar', storeLocalFile('users')))
-  @ApiBody(userBody)
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,

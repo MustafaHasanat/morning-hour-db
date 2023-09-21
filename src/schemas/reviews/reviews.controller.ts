@@ -1,6 +1,5 @@
 import {
   Body,
-  Controller,
   Delete,
   Get,
   Param,
@@ -8,17 +7,8 @@ import {
   Post,
   Query,
   Res,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ReviewsService } from './reviews.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
@@ -26,10 +16,10 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { reviewBody } from './dto/review-body';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { Public } from 'src/decorators/public.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 
-@ApiTags('Reviews')
-@Controller('reviews')
-@ApiBearerAuth()
+@ControllerWrapper('reviews')
 export class ReviewsController {
   constructor(private readonly reviewsService: ReviewsService) {}
 
@@ -56,10 +46,7 @@ export class ReviewsController {
   }
 
   @Post()
-  @ApiOkResponse({ type: CreateReviewDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(reviewBody)
+  @CreateUpdateWrapper(CreateReviewDto, reviewBody)
   async createReview(
     @Body() createReviewDto: CreateReviewDto,
     @Res() res: Response,
@@ -76,10 +63,7 @@ export class ReviewsController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateReviewDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(reviewBody)
+  @CreateUpdateWrapper(UpdateReviewDto, reviewBody)
   async updateReview(
     @Param('id') id: string,
     @Body() updateReviewDto: UpdateReviewDto,

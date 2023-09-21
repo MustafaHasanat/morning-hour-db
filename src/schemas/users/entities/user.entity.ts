@@ -1,10 +1,17 @@
 import { Item } from 'src/schemas/items/entities/item.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
+import { UserType } from 'src/schemas/user-type/entities/user-type.entity';
 import { UserGender } from 'src/types/user-gender.type';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
 import { UserRole } from 'src/types/user-role';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class User {
@@ -57,14 +64,6 @@ export class User {
   })
   address: string;
 
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    nullable: true,
-    default: UserRole.MEMBER,
-  })
-  role: UserRole;
-
   // @Column({
   //   nullable: true,
   //   type: 'simple-array',
@@ -77,6 +76,9 @@ export class User {
   avatar: string;
 
   // relations
+
+  @OneToOne(() => UserType, (userType) => userType.userId)
+  userType: UserRole;
 
   @OneToMany(() => Order, (order) => order.userId)
   orders: string[];

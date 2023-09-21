@@ -7,6 +7,7 @@ import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { ItemsService } from '../items/items.service';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
+import filterNulls from 'src/utils/helpers/filterNulls';
 
 @Injectable()
 export class AuthorsService {
@@ -69,7 +70,7 @@ export class AuthorsService {
     try {
       const newAuthor = this.authorRepository.create({
         ...createAuthorDto,
-        image: createAuthorDto.image.filename || '',
+        image: createAuthorDto?.image?.filename || '',
       });
       const response = await this.authorRepository.save(newAuthor);
 
@@ -89,24 +90,33 @@ export class AuthorsService {
 
   async updateAuthor(id: string, updateAuthorDto: UpdateAuthorDto) {
     try {
+      const author = await this.getAuthorById(id);
+      if (!author) {
+        return {
+          message: 'Invalid data',
+          data: `Author '${id}' doesn't exist`,
+          status: 404,
+        };
+      }
+
+      const newObject = filterNulls({
+        ...updateAuthorDto,
+        image: updateAuthorDto?.image?.filename,
+      });
+
       const response = await this.authorRepository.update(
         {
           id,
         },
         {
-          ...updateAuthorDto,
-          image: updateAuthorDto.image.filename || '',
+          ...newObject,
         },
       );
 
-      const isAuthorExist = response.affected !== 0;
-
       return {
-        message: isAuthorExist
-          ? 'Author has been updated successfully'
-          : "Author doesn't exist",
-        data: response,
-        status: isAuthorExist ? 200 : 404,
+        message: 'Author has been updated successfully',
+        data: { ...response, updates: newObject },
+        status: 200,
       };
     } catch (error) {
       return {
