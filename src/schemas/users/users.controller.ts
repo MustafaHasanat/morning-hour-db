@@ -2,12 +2,16 @@ import {
   Body,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
@@ -17,18 +21,21 @@ import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { userBody } from './dto/user-body';
+import { createUserBody } from './dto/create-user.body';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Public } from 'src/decorators/public.decorator';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { UserAuthGuard } from 'src/guards/user-auth.guard';
+import { Request } from 'express';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { updateUserBody } from './dto/update-user.body';
 
 @ControllerWrapper('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
-  @Public()
+  @AdminsOnly()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getUsers(
     @Query() conditions: Record<string, any>,
@@ -41,57 +48,49 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Public()
   async getUserById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto = await this.usersService.getUserById(id);
 
     return res.status(response.status).json(response);
   }
 
-  @Get('assets/:imageName')
-  async downloadImage(
-    @Param('imageName') imageName: string,
-    @Res() res: Response,
-  ) {
-    return res.sendFile(this.usersService.downloadImage(imageName).data);
+  @UseGuards(UserAuthGuard)
+  @Get('login/auth')
+  getProfile(@Req() req: Request, @Res() res: Response) {
+    return res.status(200).json({
+      message: 'User is authenticated',
+      data: req.user,
+      status: 200,
+    });
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiQuery({ name: 'email', type: 'string', required: true })
+  @ApiQuery({ name: 'password', type: 'string', required: true })
+  logIn(@Query() query: { email: string; password: string }) {
+    const { email, password } = query;
+    return this.usersService.logIn(email, password);
   }
 
   @Post()
-  @Public()
-  @CreateUpdateWrapper(CreateUserDto, userBody)
+  @CreateUpdateWrapper(CreateUserDto, createUserBody)
   @UseInterceptors(FileInterceptor('avatar', storeLocalFile('users')))
   async createUser(
     @UploadedFile() avatar: Express.Multer.File,
     @Body() createUserDto: CreateUserDto,
     @Res() res: Response,
   ) {
-    const {
-      userName,
-      email,
-      password,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
-    } = createUserDto;
     const response: CustomResponseDto = await this.usersService.createUser({
-      userName,
-      email,
-      password,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
       avatar,
+      ...createUserDto,
     });
 
     return res.status(response.status).json(response);
   }
 
   @Patch(':id')
-  @CreateUpdateWrapper(UpdateUserDto, userBody)
+  @CreateUpdateWrapper(UpdateUserDto, updateUserBody)
   @UseInterceptors(FileInterceptor('avatar', storeLocalFile('users')))
   async updateUser(
     @Param('id') id: string,
@@ -99,32 +98,9 @@ export class UsersController {
     @UploadedFile() avatar: Express.Multer.File,
     @Res() res: Response,
   ) {
-    const {
-      userName,
-      email,
-      password,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
-      recentVisited,
-      wishlist,
-      cart,
-    } = updateUserDto;
     const response: CustomResponseDto = await this.usersService.updateUser(id, {
-      userName,
-      email,
-      password,
       avatar,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
-      recentVisited,
-      wishlist,
-      cart,
+      ...updateUserDto,
     });
 
     return res.status(response.status).json(response);

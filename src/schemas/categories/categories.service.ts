@@ -1,6 +1,6 @@
+import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { join } from 'path';
 import { Repository } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -45,24 +45,6 @@ export class CategoriesService {
     }
   }
 
-  downloadImage(imageName: string) {
-    try {
-      const response = join(
-        process.cwd(),
-        'public/assets/categories/' + imageName,
-      );
-      return {
-        message: response
-          ? 'Image returned successfully'
-          : "Category doesn't exist",
-        data: response,
-        status: response ? 200 : 404,
-      };
-    } catch (error) {
-      return { message: 'Error occurred', data: error, status: 500 };
-    }
-  }
-
   async createCategory(createCategoryDto: CreateCategoryDto) {
     try {
       const newCategory = this.categoryRepository.create({
@@ -87,24 +69,31 @@ export class CategoriesService {
 
   async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
     try {
+      const category = await this.getCategoryById(id);
+      if (!category) {
+        return {
+          message: 'Invalid data',
+          data: `Category '${id}' doesn't exist`,
+          status: 404,
+        };
+      }
+
       const response = await this.categoryRepository.update(
         {
           id,
         },
         {
-          ...updateCategoryDto,
-          image: updateCategoryDto.image.filename || '',
+          ...filterNullsObject({
+            ...updateCategoryDto,
+            image: updateCategoryDto?.image?.filename,
+          }),
         },
       );
 
-      const isCategoryExist = response.affected !== 0;
-
       return {
-        message: isCategoryExist
-          ? 'Category has been updated successfully'
-          : "Category doesn't exist",
+        message: 'Category has been updated successfully',
         data: response,
-        status: isCategoryExist ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return {

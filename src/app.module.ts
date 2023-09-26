@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -7,7 +8,6 @@ import { AuthorsModule } from './schemas/authors/authors.module';
 import { CategoriesModule } from './schemas/categories/categories.module';
 import { ItemsModule } from './schemas/items/items.module';
 import { UsersModule } from './schemas/users/users.module';
-import { AuthModule } from './schemas/auth/auth.module';
 import entities from './entities';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
@@ -16,7 +16,7 @@ import { OrdersModule } from './schemas/orders/orders.module';
 import { ReviewsModule } from './schemas/reviews/review.module';
 import constants from 'src/utils/constants/auth.constants';
 import { BackendGuard } from './guards/backend.guard';
-import { UserTypesModule } from './schemas/user-type/user-types.module';
+import { AssetsModule } from './schemas/assets/assets.module';
 
 @Module({
   imports: [
@@ -41,29 +41,31 @@ import { UserTypesModule } from './schemas/user-type/user-types.module';
       signOptions: { expiresIn: constants.ONE_HOUR },
     }),
     // PassportModule.register({ defaultStrategy: 'google' }),
-    AuthModule,
     AuthorsModule,
     CategoriesModule,
     ItemsModule,
     OrdersModule,
     ReviewsModule,
     UsersModule,
-    UserTypesModule,
+    AssetsModule,
   ],
   controllers: [AppController],
   providers: [
     AppService,
-    // {
-    //   provide: APP_GUARD,
-    //   useClass: UserAuthGuard,
-    // },
+    {
+      provide: APP_GUARD,
+      useClass: UserAuthGuard,
+    },
   ],
 })
 export class AppModule {
   // Apply the guard middleware to all routes in this app to prevent unauthorized requests
-  // configure(consumer: MiddlewareConsumer) {
-  //   consumer
-  //     .apply(BackendGuard)
-  //     .forRoutes({ path: '*', method: RequestMethod.ALL });
-  // }
+  configure(consumer: MiddlewareConsumer) {
+    // consumer
+    //   .apply(BackendGuard)
+    //   .forRoutes({ path: '*', method: RequestMethod.ALL });
+    // consumer
+    //   .apply(BackendGuard)
+    //   .forRoutes({ path: '*', method: RequestMethod.ALL });
+  }
 }

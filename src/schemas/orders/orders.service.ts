@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 
 @Injectable()
 export class OrdersService {
@@ -76,7 +77,7 @@ export class OrdersService {
 
   async updateOrder(id: string, updateOrderDto: UpdateOrderDto) {
     try {
-      const order = await this.getOrderById(updateOrderDto.userId);
+      const order = await this.getOrderById(id);
       const user = await this.usersService.getUserById(updateOrderDto.userId);
 
       if (!order || !user) {
@@ -91,17 +92,13 @@ export class OrdersService {
         {
           id,
         },
-        updateOrderDto,
+        filterNullsObject(updateOrderDto),
       );
 
-      const isOrderExist = response.affected !== 0;
-
       return {
-        message: isOrderExist
-          ? 'Order has been updated successfully'
-          : "Order doesn't exist",
+        message: 'Order has been updated successfully',
         data: response,
-        status: isOrderExist ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return {

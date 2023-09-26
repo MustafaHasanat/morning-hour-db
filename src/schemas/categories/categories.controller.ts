@@ -16,19 +16,18 @@ import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { categoryBody } from './dto/category-body';
+import { createCategoryBody } from './dto/create-category.body';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
-import { Public } from 'src/decorators/public.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { updateCategoryBody } from './dto/update-category.body';
 
 @ControllerWrapper('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  @Public()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getCategories(
     @Query() conditions: Record<string, any>,
@@ -41,7 +40,6 @@ export class CategoriesController {
   }
 
   @Get(':id')
-  @Public()
   async getCategoryById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.categoriesService.getCategoryById(id);
@@ -49,27 +47,17 @@ export class CategoriesController {
     return res.status(response.status).json(response);
   }
 
-  @Get('assets/:imageName')
-  @Public()
-  async downloadImage(
-    @Param('imageName') imageName: string,
-    @Res() res: Response,
-  ) {
-    return res.sendFile(this.categoriesService.downloadImage(imageName).data);
-  }
-
   @Post()
-  @CreateUpdateWrapper(CreateCategoryDto, categoryBody)
+  @CreateUpdateWrapper(CreateCategoryDto, createCategoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
   async createCategory(
     @UploadedFile() image: Express.Multer.File,
     @Body() createCategoryDto: CreateCategoryDto,
     @Res() res: Response,
   ) {
-    const { title } = createCategoryDto;
     const response: CustomResponseDto =
       await this.categoriesService.createCategory({
-        title,
+        ...createCategoryDto,
         image,
       });
 
@@ -77,7 +65,7 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @CreateUpdateWrapper(CreateCategoryDto, categoryBody)
+  @CreateUpdateWrapper(UpdateCategoryDto, updateCategoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
   async updateCategory(
     @Param('id') id: string,
@@ -85,10 +73,9 @@ export class CategoriesController {
     @UploadedFile() image: Express.Multer.File,
     @Res() res: Response,
   ) {
-    const { title } = updateCategoryDto;
     const response: CustomResponseDto =
       await this.categoriesService.updateCategory(id, {
-        title,
+        ...updateCategoryDto,
         image,
       });
 

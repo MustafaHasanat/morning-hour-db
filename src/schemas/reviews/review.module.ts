@@ -10,5 +10,6 @@ import { ItemsModule } from '../items/items.module';
   imports: [UsersModule, ItemsModule, TypeOrmModule.forFeature([Review])],
   controllers: [ReviewsController],
   providers: [ReviewsService],
+  exports: [ReviewsService],
 })
 export class ReviewsModule {}

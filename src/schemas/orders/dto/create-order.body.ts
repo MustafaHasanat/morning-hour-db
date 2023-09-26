@@ -1,4 +1,4 @@
-export const orderBody = {
+export const createOrderBody = {
   consumes: ['multipart/form-data'],
   produces: ['application/json'],
   schema: {

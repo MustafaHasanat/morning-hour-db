@@ -1,13 +1,12 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { join } from 'path';
 import { Repository } from 'typeorm';
 import { Author } from './entities/author.entity';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { ItemsService } from '../items/items.service';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
-import filterNulls from 'src/utils/helpers/filterNulls';
+import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 
 @Injectable()
 export class AuthorsService {
@@ -40,24 +39,6 @@ export class AuthorsService {
       const response = await this.authorRepository.findOneBy({ id });
       return {
         message: response ? 'Author has been found' : "Author doesn't exist",
-        data: response,
-        status: response ? 200 : 404,
-      };
-    } catch (error) {
-      return { message: 'Error occurred', data: error, status: 500 };
-    }
-  }
-
-  downloadImage(imageName: string) {
-    try {
-      const response = join(
-        process.cwd(),
-        'public/assets/authors/' + imageName,
-      );
-      return {
-        message: response
-          ? 'Image returned successfully'
-          : "Author doesn't exist",
         data: response,
         status: response ? 200 : 404,
       };
@@ -99,23 +80,21 @@ export class AuthorsService {
         };
       }
 
-      const newObject = filterNulls({
-        ...updateAuthorDto,
-        image: updateAuthorDto?.image?.filename,
-      });
-
       const response = await this.authorRepository.update(
         {
           id,
         },
         {
-          ...newObject,
+          ...filterNullsObject({
+            ...updateAuthorDto,
+            image: updateAuthorDto?.image?.filename,
+          }),
         },
       );
 
       return {
         message: 'Author has been updated successfully',
-        data: { ...response, updates: newObject },
+        data: response,
         status: 200,
       };
     } catch (error) {

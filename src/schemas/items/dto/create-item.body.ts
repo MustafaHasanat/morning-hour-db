@@ -1,4 +1,4 @@
-export const itemBody = {
+export const createItemBody = {
   consumes: ['multipart/form-data'],
   produces: ['application/json'],
   schema: {

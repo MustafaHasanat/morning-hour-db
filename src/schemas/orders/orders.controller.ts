@@ -13,10 +13,11 @@ import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { orderBody } from './dto/order-body';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { createOrderBody } from './dto/create-order.body';
+import { updateOrderBody } from './dto/update-order.body';
 
 @ControllerWrapper('orders')
 export class OrdersController {
@@ -43,34 +44,27 @@ export class OrdersController {
   }
 
   @Post()
-  @CreateUpdateWrapper(CreateOrderDto, orderBody)
+  @CreateUpdateWrapper(CreateOrderDto, createOrderBody)
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @Res() res: Response,
   ) {
-    const { userId, items } = createOrderDto;
-    const response: CustomResponseDto = await this.ordersService.createOrder({
-      userId,
-      items,
-    });
+    const response: CustomResponseDto =
+      await this.ordersService.createOrder(createOrderDto);
 
     return res.status(response.status).json(response);
   }
 
   @Patch(':id')
-  @CreateUpdateWrapper(CreateOrderDto, orderBody)
+  @CreateUpdateWrapper(UpdateOrderDto, updateOrderBody)
   async updateOrder(
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,
     @Res() res: Response,
   ) {
-    const { userId, items } = updateOrderDto;
     const response: CustomResponseDto = await this.ordersService.updateOrder(
       id,
-      {
-        userId,
-        items,
-      },
+      updateOrderDto,
     );
 
     return res.status(response.status).json(response);

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -6,15 +5,24 @@ import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
-import { join } from 'path';
-import { hash } from 'bcrypt';
+import { compare, hash } from 'bcrypt';
+import { filterNullsObject } from 'src/utils/helpers/filterNulls';
+import { JwtService } from '@nestjs/jwt';
+import { TokenPayload } from 'src/types/token-payload.type';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    private jwtService: JwtService,
   ) {}
+
+  passwordRemover(user: User) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...rest } = user;
+    return rest;
+  }
 
   async getUsers(conditions: Record<string, any>, withPass: boolean = false) {
     try {
@@ -22,8 +30,7 @@ export class UsersService {
 
       // remove the password from all the users before sending response
       const updatedUsers = response.map((user) => {
-        const { password, ...rest } = user;
-        return withPass ? user : rest;
+        return withPass ? user : this.passwordRemover(user);
       });
 
       return {
@@ -50,28 +57,10 @@ export class UsersService {
         };
       }
 
-      // remove the password from the user before sending response
-      const { password, ...deprecatedPassUser } = response;
-
       return {
         message: 'User has been found',
-        data: deprecatedPassUser,
+        data: this.passwordRemover(response),
         status: 200,
-      };
-    } catch (error) {
-      return { message: 'Error occurred', data: error, status: 500 };
-    }
-  }
-
-  downloadImage(imageName: string) {
-    try {
-      const response = join(process.cwd(), 'public/assets/users/' + imageName);
-      return {
-        message: response
-          ? 'Image returned successfully'
-          : "User doesn't exist",
-        data: response,
-        status: response ? 200 : 404,
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };
@@ -91,7 +80,7 @@ export class UsersService {
 
       return {
         message: 'User has been created successfully',
-        data: response,
+        data: this.passwordRemover(response),
         status: 200,
       };
     } catch (error) {
@@ -110,18 +99,20 @@ export class UsersService {
         return {
           message: 'Invalid data',
           data: `Provided user does not exist`,
-          status: 400,
+          status: 404,
         };
       }
+
+      const newObject = filterNullsObject({
+        ...updateUserDto,
+        avatar: updateUserDto?.avatar?.filename,
+      });
 
       const response = await this.userRepository.update(
         {
           id,
         },
-        {
-          ...updateUserDto,
-          avatar: updateUserDto.avatar?.filename || '',
-        },
+        newObject,
       );
 
       return {
@@ -180,6 +171,45 @@ export class UsersService {
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };
+    }
+  }
+
+  async logIn(email: string, password: string) {
+    try {
+      const response = await this.getUsers({ email }, true);
+      if (response?.data?.length === 0) {
+        return {
+          message: 'Invalid email',
+          data: email,
+          status: 400,
+        };
+      }
+
+      const user = response.data[0];
+      if (!(await compare(password, user?.password))) {
+        return {
+          message: 'Invalid password',
+          data: password,
+          status: 400,
+        };
+      }
+
+      const payload: TokenPayload = {
+        userId: user?.id,
+        username: user?.userName,
+      };
+
+      return {
+        message: 'Token has been generated',
+        data: await this.jwtService.signAsync(payload),
+        status: 200,
+      };
+    } catch (error) {
+      return {
+        message: 'Error occurred',
+        data: error,
+        status: 500,
+      };
     }
   }
 }
