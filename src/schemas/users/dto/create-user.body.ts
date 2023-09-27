@@ -1,7 +1,7 @@
-import { UserGender } from 'src/types/user-gender.type';
-import { UserRole } from 'src/types/user-role';
+import { UserGender } from 'src/enums/user-gender.enum';
+import { UserRole } from 'src/enums/user-role.enum';
 
-export const userBody = {
+export const createUserBody = {
   consumes: ['multipart/form-data'],
   produces: ['application/json'],
   schema: {

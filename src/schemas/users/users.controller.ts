@@ -1,49 +1,54 @@
 import {
   Body,
-  Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
   Query,
+  Req,
   Res,
   UploadedFile,
   UseInterceptors,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiBody, ApiQuery } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { userBody } from './dto/user-body';
+import { createUserBody } from './dto/create-user.body';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { Public } from 'src/decorators/public.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { Request } from 'express';
+import { updateUserBody } from './dto/update-user.body';
+import { MembersOnly } from 'src/decorators/members.decorator';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { LoginUserDto } from './dto/login-user.dto';
+import { FullTokenPayload } from 'src/types/token-payload.type';
 
-@ApiTags('Users')
-@Controller('users')
-@ApiBearerAuth()
+@ControllerWrapper('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  getUserTokenData(req: Request): FullTokenPayload {
+    return this.usersService.getUserTokenData(req);
+  }
+
   @Get()
-  @Public()
+  // @AdminsOnly()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getUsers(
     @Query() conditions: Record<string, any>,
     @Res() res: Response,
+    @Req() req: Request,
   ) {
+    this.getUserTokenData(req);
+
     const response: CustomResponseDto =
       await this.usersService.getUsers(conditions);
 
@@ -51,108 +56,82 @@ export class UsersController {
   }
 
   @Get(':id')
-  @Public()
+  @MembersOnly()
   async getUserById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto = await this.usersService.getUserById(id);
 
     return res.status(response.status).json(response);
   }
 
-  @Get('assets/:imageName')
-  async downloadImage(
-    @Param('imageName') imageName: string,
-    @Res() res: Response,
-  ) {
-    return res.sendFile(this.usersService.downloadImage(imageName).data);
+  @Get('login/auth')
+  getProfile(@Req() req: Request, @Res() res: Response) {
+    return res.status(200).json({
+      message: 'User is authenticated',
+      data: this.getUserTokenData(req),
+      status: 200,
+    });
+  }
+
+  @Post('login')
+  @HttpCode(HttpStatus.OK)
+  @ApiBody({ type: LoginUserDto })
+  logIn(@Body() body: LoginUserDto) {
+    const { email, password } = body;
+    return this.usersService.logIn(email, password);
   }
 
   @Post()
-  @Public()
-  @ApiOkResponse({ type: CreateUserDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @CreateUpdateWrapper(CreateUserDto, createUserBody)
   @UseInterceptors(FileInterceptor('avatar', storeLocalFile('users')))
-  @ApiBody(userBody)
   async createUser(
     @UploadedFile() avatar: Express.Multer.File,
     @Body() createUserDto: CreateUserDto,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
-    const {
-      userName,
-      email,
-      password,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
-    } = createUserDto;
-    const response: CustomResponseDto = await this.usersService.createUser({
-      userName,
-      email,
-      password,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
-      avatar,
-    });
+    const response: CustomResponseDto = await this.usersService.createUser(
+      {
+        avatar,
+        ...createUserDto,
+      },
+      this.getUserTokenData(req),
+    );
 
     return res.status(response.status).json(response);
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateUserDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @MembersOnly()
+  @CreateUpdateWrapper(UpdateUserDto, updateUserBody)
   @UseInterceptors(FileInterceptor('avatar', storeLocalFile('users')))
-  @ApiBody(userBody)
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @UploadedFile() avatar: Express.Multer.File,
+    @Req() req: Request,
     @Res() res: Response,
   ) {
-    const {
-      userName,
-      email,
-      password,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
-      recentVisited,
-      wishlist,
-      cart,
-    } = updateUserDto;
-    const response: CustomResponseDto = await this.usersService.updateUser(id, {
-      userName,
-      email,
-      password,
-      avatar,
-      phoneNumber,
-      gender,
-      pricingRange,
-      address,
-      role,
-      recentVisited,
-      wishlist,
-      cart,
-    });
+    const response: CustomResponseDto = await this.usersService.updateUser(
+      id,
+      {
+        avatar,
+        ...updateUserDto,
+      },
+      this.getUserTokenData(req),
+    );
 
     return res.status(response.status).json(response);
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   deleteAllUsers() {
     return this.usersService.deleteAllUsers();
   }
 
   @Delete(':id')
-  deleteUser(@Param('id') id: string) {
-    return this.usersService.deleteUser(id);
+  @MembersOnly()
+  async deleteUser(@Param('id') id: string, @Req() req: Request) {
+    return this.usersService.deleteUser(id, this.getUserTokenData(req));
   }
 }

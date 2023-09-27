@@ -1,4 +1,4 @@
-export const reviewBody = {
+export const createReviewBody = {
   consumes: ['multipart/form-data'],
   produces: ['application/json'],
   schema: {

@@ -7,6 +7,7 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { UsersService } from '../users/users.service';
 import { ItemsService } from '../items/items.service';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 
 @Injectable()
 export class ReviewsService {
@@ -82,7 +83,7 @@ export class ReviewsService {
       // check the user, item, and review
       const user = await this.usersService.getUserById(updateReviewDto.userId);
       const item = await this.itemsService.getItemById(updateReviewDto.itemId);
-      const review = await this.getReviewById(updateReviewDto.userId);
+      const review = await this.getReviewById(id);
       if (!user || !item || !review) {
         return {
           message: 'Invalid data',
@@ -98,7 +99,7 @@ export class ReviewsService {
         {
           id,
         },
-        updateReviewDto,
+        filterNullsObject(updateReviewDto),
       );
 
       return {
@@ -132,13 +133,20 @@ export class ReviewsService {
 
   async deleteReview(id: string) {
     try {
+      const review = await this.getReviewById(id);
+      if (!review.data) {
+        return {
+          message: 'Invalid data',
+          data: "Review doesn't exist",
+          status: 404,
+        };
+      }
+
       const response = await this.reviewRepository.delete(id);
       return {
-        message: response
-          ? 'Review has been deleted successfully'
-          : "Review doesn't exist",
+        message: 'Review has been deleted successfully',
         data: response,
-        status: response ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };

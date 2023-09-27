@@ -1,9 +1,9 @@
+import { UserGender } from 'src/enums/user-gender.enum';
+import { UserRole } from 'src/enums/user-role.enum';
 import { Item } from 'src/schemas/items/entities/item.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
-import { UserGender } from 'src/types/user-gender.type';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
-import { UserRole } from 'src/types/user-role';
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
@@ -43,6 +43,14 @@ export class User {
   gender: UserGender;
 
   @Column({
+    type: 'enum',
+    enum: UserRole,
+    nullable: true,
+    default: UserRole.MEMBER,
+  })
+  role: UserRole;
+
+  @Column({
     type: 'simple-json',
     nullable: true,
     default: {
@@ -56,14 +64,6 @@ export class User {
     nullable: true,
   })
   address: string;
-
-  @Column({
-    type: 'enum',
-    enum: UserRole,
-    nullable: true,
-    default: UserRole.MEMBER,
-  })
-  role: UserRole;
 
   // @Column({
   //   nullable: true,
