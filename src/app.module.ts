@@ -38,7 +38,7 @@ import { AssetsModule } from './schemas/assets/assets.module';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: constants.ONE_HOUR },
+      signOptions: { expiresIn: constants.ONE_DAY },
     }),
     // PassportModule.register({ defaultStrategy: 'google' }),
     AuthorsModule,

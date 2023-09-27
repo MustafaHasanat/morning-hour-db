@@ -22,6 +22,7 @@ import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { updateItemBody } from './dto/update-item.body';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
 
 @ControllerWrapper('items')
 export class ItemsController {
@@ -47,6 +48,7 @@ export class ItemsController {
   }
 
   @Post()
+  @AdminsOnly()
   @CreateUpdateWrapper(CreateItemDto, createItemBody)
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -78,6 +80,7 @@ export class ItemsController {
   }
 
   @Patch(':id')
+  @AdminsOnly()
   @CreateUpdateWrapper(UpdateItemDto, updateItemBody)
   @UseInterceptors(
     FileFieldsInterceptor(
@@ -110,6 +113,7 @@ export class ItemsController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllItems(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.itemsService.deleteAllItems();
@@ -118,6 +122,7 @@ export class ItemsController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteItem(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto = await this.itemsService.deleteItem(id);
 

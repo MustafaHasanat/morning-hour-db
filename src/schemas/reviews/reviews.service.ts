@@ -133,13 +133,20 @@ export class ReviewsService {
 
   async deleteReview(id: string) {
     try {
+      const review = await this.getReviewById(id);
+      if (!review.data) {
+        return {
+          message: 'Invalid data',
+          data: "Review doesn't exist",
+          status: 404,
+        };
+      }
+
       const response = await this.reviewRepository.delete(id);
       return {
-        message: response
-          ? 'Review has been deleted successfully'
-          : "Review doesn't exist",
+        message: 'Review has been deleted successfully',
         data: response,
-        status: response ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };

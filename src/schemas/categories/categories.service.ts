@@ -137,7 +137,8 @@ export class CategoriesService {
       const response = await this.categoryRepository.delete(id);
 
       // delete the image related to the file
-      deleteFile('./public/assets/categories/' + category?.data?.image);
+      category?.data?.image &&
+        deleteFile('./public/assets/categories/' + category?.data?.image);
 
       return {
         message: 'Category has been deleted successfully',

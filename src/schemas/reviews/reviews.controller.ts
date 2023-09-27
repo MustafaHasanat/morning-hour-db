@@ -18,6 +18,8 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { updateReviewBody } from './dto/update-review.body';
+import { MembersOnly } from 'src/decorators/members.decorator';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
 
 @ControllerWrapper('reviews')
 export class ReviewsController {
@@ -44,6 +46,7 @@ export class ReviewsController {
   }
 
   @Post()
+  @MembersOnly()
   @CreateUpdateWrapper(CreateReviewDto, createReviewBody)
   async createReview(
     @Body() createReviewDto: CreateReviewDto,
@@ -56,6 +59,7 @@ export class ReviewsController {
   }
 
   @Patch(':id')
+  @AdminsOnly()
   @CreateUpdateWrapper(UpdateReviewDto, updateReviewBody)
   async updateReview(
     @Param('id') id: string,
@@ -71,6 +75,7 @@ export class ReviewsController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllReviews(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.reviewsService.deleteAllReviews();
@@ -79,6 +84,7 @@ export class ReviewsController {
   }
 
   @Delete(':id')
+  @MembersOnly()
   async deleteReview(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.reviewsService.deleteReview(id);

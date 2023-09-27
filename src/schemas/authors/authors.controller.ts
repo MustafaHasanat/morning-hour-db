@@ -19,6 +19,7 @@ import { createAuthorBody } from './dto/create-author.body';
 import { updateAuthorBody } from './dto/update-author.body';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
 
 @ControllerWrapper('authors')
 export class AuthorsController {
@@ -45,6 +46,7 @@ export class AuthorsController {
   }
 
   @Post()
+  @AdminsOnly()
   @CreateUpdateWrapper(CreateAuthorDto, createAuthorBody)
   async createAuthor(
     @UploadedFile() image: Express.Multer.File,
@@ -60,6 +62,7 @@ export class AuthorsController {
   }
 
   @Patch(':id')
+  @AdminsOnly()
   @CreateUpdateWrapper(UpdateAuthorDto, updateAuthorBody)
   async updateAuthor(
     @Param('id') id: string,
@@ -79,6 +82,7 @@ export class AuthorsController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllAuthors(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.authorsService.deleteAllAuthors();
@@ -87,6 +91,7 @@ export class AuthorsController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteAuthor(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.authorsService.deleteAuthor(id);

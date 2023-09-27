@@ -22,6 +22,7 @@ import { Response } from 'express';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { updateCategoryBody } from './dto/update-category.body';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
 
 @ControllerWrapper('categories')
 export class CategoriesController {
@@ -48,6 +49,7 @@ export class CategoriesController {
   }
 
   @Post()
+  @AdminsOnly()
   @CreateUpdateWrapper(CreateCategoryDto, createCategoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
   async createCategory(
@@ -65,6 +67,7 @@ export class CategoriesController {
   }
 
   @Patch(':id')
+  @AdminsOnly()
   @CreateUpdateWrapper(UpdateCategoryDto, updateCategoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
   async updateCategory(
@@ -83,6 +86,7 @@ export class CategoriesController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllCategories(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.categoriesService.deleteAllCategories();
@@ -91,6 +95,7 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteCategory(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.categoriesService.deleteCategory(id);

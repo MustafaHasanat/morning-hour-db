@@ -23,7 +23,17 @@ export class UserAuthGuard implements CanActivate {
     private readonly usersService: UsersService,
   ) {}
 
-  private getDecoratorKeys(keys: string[], context: ExecutionContext) {
+  /**
+   * Use the provided keys to detect the decorators existence
+   *
+   * @param keys an array of decorated keys
+   * @param context the context of the guard
+   * @returns an array of mapped booleans where each one refers to its key
+   */
+  private getDecoratorKeys(
+    keys: string[],
+    context: ExecutionContext,
+  ): boolean[] {
     return keys.map((key) => {
       return this.reflector.getAllAndOverride<boolean>(key, [
         context.getHandler(),
@@ -32,57 +42,80 @@ export class UserAuthGuard implements CanActivate {
     });
   }
 
+  /**
+   * Get the Bearer Token from the request's header if existed
+   */
+  private extractTokenFromHeader(request: Request): string | undefined {
+    const [type, token] = request.headers.authorization?.split(' ') ?? [];
+    return type === 'Bearer' ? token : undefined;
+  }
+
+  /**
+   * This will be run automatically to validate every endpoint in the app
+   * to check the authorization level of the user and prevent any unauthorized requests
+   */
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const [isPublic, membersOnly, adminsOnly] = this.getDecoratorKeys(
-      [
-        constants.IS_PUBLIC_KEY,
-        constants.IS_MEMBERS_ONLY,
-        constants.IS_ADMINS_ONLY,
-      ],
+    const [membersOnly, adminsOnly] = this.getDecoratorKeys(
+      [constants.IS_MEMBERS_ONLY, constants.IS_ADMINS_ONLY],
       context,
     );
 
-    console.log(membersOnly, adminsOnly);
-
-    // both of them are false (membersOnly, adminsOnly) -> it's a public endpoint
-    if (!membersOnly && !adminsOnly) {
-      return true;
-    }
-
-    // one of them is true (membersOnly, adminsOnly) -> not a public endpoint
+    // get the token from the request
     const request = context.switchToHttp().getRequest();
     const token = this.extractTokenFromHeader(request);
 
-    if (!token) {
-      throw new UnauthorizedException('Unauthorized request, members only');
-    }
-
     try {
-      const payload: TokenPayload = await this.jwtService.verifyAsync(token, {
-        secret: process.env.JWT_SECRET,
-      });
+      // prepare an object to be passed to the request under the name 'user', it will use
+      // the token to check if the user is authenticated or not
+      // if the token is undefined (a guest user), pass a nullable value
+      const payload = token
+        ? await this.jwtService.verifyAsync(token, {
+            secret: process.env.JWT_SECRET,
+          })
+        : {};
+
+      // pass the payload object to the request under the name 'user' so we can check for the
+      // user's info anywhere in the app
       request['user'] = payload;
 
-      const user: { data: User } = await this.usersService.getUserById(
-        payload.userId,
-      );
+      // get the user using its ID if the token exists, otherwise pass a nullable value
+      const user: { data: User } = payload
+        ? await this.usersService.getUserById(payload?.userId)
+        : { data: null };
 
-      if (user.data.role === UserRole.MEMBER && adminsOnly) {
+      // if both of them are false (membersOnly, adminsOnly) -> it's a public endpoint
+      // means that no restrictions on it
+      if (!membersOnly && !adminsOnly) {
+        return true;
+      }
+
+      // ----- from here, the endpoint is not public -----
+
+      // if the token is undefined -> it's a guest user
+      // a guest user can't pass this endpoint since it's not public
+      if (!token) {
+        throw new UnauthorizedException(
+          `Unauthorized request, ${adminsOnly ? 'admins' : 'members'} only`,
+        );
+      }
+
+      // ----- from here, the endpoint is for members and admins -----
+
+      // if the user is a member and the endpoint is for admins, block him here
+      // a member user can't pass this endpoint since it's only for admins
+      if (user?.data?.role === UserRole.MEMBER && adminsOnly) {
         throw new UnauthorizedException('Unauthorized request, admins only');
       }
     } catch (error) {
       throw new BadRequestException({
         message: 'Unexpected error occurred',
         data: error.response,
-        status: 400,
+        status: 500,
       });
     }
 
-    return true;
-  }
+    // ----- from here, the endpoint is admins only -----
 
-  private extractTokenFromHeader(request: Request): string | undefined {
-    const [type, token] = request.headers.authorization?.split(' ') ?? [];
-    return type === 'Bearer' ? token : undefined;
+    return true;
   }
 }

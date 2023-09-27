@@ -5,12 +5,14 @@ import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
 import { ApiQuery } from '@nestjs/swagger';
 import { TablesAssets } from 'src/enums/tables-assets.enum';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
 
 @ControllerWrapper('assets')
 export class AssetsController {
   constructor(private readonly assetsService: AssetsService) {}
 
   @Get('images')
+  @AdminsOnly()
   @ApiQuery({
     name: 'tableName',
     type: 'enum',
@@ -29,6 +31,7 @@ export class AssetsController {
   }
 
   @Get('download')
+  @AdminsOnly()
   @ApiQuery({ name: 'imageName', type: 'string', required: true })
   @ApiQuery({
     name: 'tableName',

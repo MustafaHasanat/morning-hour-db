@@ -84,12 +84,10 @@ export class AuthorsService {
         {
           id,
         },
-        {
-          ...filterNullsObject({
-            ...updateAuthorDto,
-            image: updateAuthorDto?.image?.filename,
-          }),
-        },
+        filterNullsObject({
+          ...updateAuthorDto,
+          image: updateAuthorDto?.image?.filename,
+        }),
       );
 
       return {
@@ -136,11 +134,11 @@ export class AuthorsService {
         };
       }
 
-      const imageName = author?.data?.image;
       const response = await this.authorRepository.delete(id);
 
       // delete the image related to the file
-      deleteFile('./public/assets/authors/' + imageName);
+      author?.data?.image &&
+        deleteFile('./public/assets/authors/' + author?.data?.image);
 
       return {
         message: 'Author has been deleted successfully',

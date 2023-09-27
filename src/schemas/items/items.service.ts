@@ -180,15 +180,15 @@ export class ItemsService {
         };
       }
 
-      const imageName: string = item?.data?.image;
       const screenshotsNames: string[] = item?.data?.screenshots;
       const response = await this.itemRepository.delete(id);
 
       // delete the images related to the file
-      deleteFile('./public/assets/items/' + imageName);
+      item?.data?.image &&
+        deleteFile('./public/assets/items/' + item?.data?.image);
 
       screenshotsNames.forEach((screenshot) => {
-        deleteFile('./public/assets/items/' + screenshot);
+        screenshot && deleteFile('./public/assets/items/' + screenshot);
       });
 
       return {

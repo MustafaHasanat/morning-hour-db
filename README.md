@@ -5,22 +5,7 @@
 # The database for the Morning Hour website
 
 ## Authentication
-use the roles of users to build guards to limit their access to the endpoints accordingly
-
-admin:
-- no limits 
-
-member: 
-- create, edit, and delete Reviews and Orders
-- edit a user
-- can't create or edit anything else
-- get Orders
-
-public: 
-- create a user
-- can't create or edit anything else
-- get Authors, Categories, Items, Reviews
-
+done
 
 ## Dockerization
 create a (DockerFile) and (docker-compose.yml)

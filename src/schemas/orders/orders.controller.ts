@@ -18,12 +18,15 @@ import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { createOrderBody } from './dto/create-order.body';
 import { updateOrderBody } from './dto/update-order.body';
+import { MembersOnly } from 'src/decorators/members.decorator';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
 
 @ControllerWrapper('orders')
 export class OrdersController {
   constructor(private readonly ordersService: OrdersService) {}
 
   @Get()
+  @MembersOnly()
   @ApiQuery({ name: 'conditions', type: 'object', required: true })
   async getOrders(
     @Query() conditions: Record<string, any>,
@@ -36,6 +39,7 @@ export class OrdersController {
   }
 
   @Get(':id')
+  @MembersOnly()
   async getOrderById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.ordersService.getOrderById(id);
@@ -44,6 +48,7 @@ export class OrdersController {
   }
 
   @Post()
+  @MembersOnly()
   @CreateUpdateWrapper(CreateOrderDto, createOrderBody)
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
@@ -56,6 +61,7 @@ export class OrdersController {
   }
 
   @Patch(':id')
+  @AdminsOnly()
   @CreateUpdateWrapper(UpdateOrderDto, updateOrderBody)
   async updateOrder(
     @Param('id') id: string,
@@ -71,6 +77,7 @@ export class OrdersController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllOrders(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.ordersService.deleteAllOrders();
@@ -79,6 +86,7 @@ export class OrdersController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteOrder(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.ordersService.deleteOrder(id);
