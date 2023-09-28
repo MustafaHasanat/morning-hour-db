@@ -9,7 +9,6 @@ import {
   Res,
   Query,
 } from '@nestjs/common';
-import { ApiQuery } from '@nestjs/swagger';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
@@ -20,19 +19,36 @@ import { updateAuthorBody } from './dto/update-author.body';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { AuthorFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
 
 @ControllerWrapper('authors')
 export class AuthorsController {
   constructor(private readonly authorsService: AuthorsService) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: AuthorFields,
+  })
   async getAuthors(
-    @Query() conditions: Record<string, any>,
+    @Query() query: { field: AuthorFields } & GetAllProps,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.authorsService.getAuthors(conditions);
+    const {
+      field,
+      sortDirection,
+      filteredTerm,
+      filterOperator,
+      ...conditions
+    } = query;
+    const response: CustomResponseDto = await this.authorsService.getAuthors({
+      field,
+      sortDirection,
+      conditions,
+      filteredTerm,
+      filterOperator,
+    });
 
     return res.status(response.status).json(response);
   }

@@ -7,20 +7,51 @@ import { UpdateAuthorDto } from './dto/update-author.dto';
 import { ItemsService } from '../items/items.service';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
+import {
+  AuthorFields,
+  FilterOperator,
+  SortDirection,
+} from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class AuthorsService {
   constructor(
     @InjectRepository(Author)
     private readonly authorRepository: Repository<Author>,
+    private readonly appService: AppService,
 
     @Inject(forwardRef(() => ItemsService))
     private readonly itemsService: ItemsService,
   ) {}
 
-  async getAuthors(conditions: Record<string, any>) {
+  async getAuthors({
+    field = AuthorFields.NAME,
+    filteredTerm = '',
+    filterOperator = FilterOperator.CONTAINS,
+    sortDirection = SortDirection.ASC,
+    conditions = null,
+  }: { field: AuthorFields } & GetAllProps) {
     try {
-      const response = await this.authorRepository.findBy(conditions);
+      const findQuery = this.appService.getFilteredQuery({
+        field,
+        filteredTerm,
+        filterOperator,
+        sortDirection,
+        conditions,
+      });
+
+      if (!findQuery) {
+        return {
+          message:
+            'The inputs (field, filterOperator, filteredTerm) must be consistent',
+          data: null,
+          status: 400,
+        };
+      }
+
+      const response = await this.authorRepository.find(findQuery);
 
       return {
         message: response.length

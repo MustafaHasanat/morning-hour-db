@@ -12,21 +12,52 @@ import {
   filterNullsObject,
 } from 'src/utils/helpers/filterNulls';
 import { mergeWithoutDups } from 'src/utils/helpers/mergeWithoutDups';
+import {
+  FilterOperator,
+  ItemFields,
+  SortDirection,
+} from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class ItemsService {
   constructor(
     @InjectRepository(Item)
     private readonly itemRepository: Repository<Item>,
+    private readonly appService: AppService,
 
     @Inject(forwardRef(() => AuthorsService))
     private readonly authorsService: AuthorsService,
     private readonly categoriesService: CategoriesService,
   ) {}
 
-  async getItems(conditions: Record<string, any>) {
+  async getItems({
+    field = ItemFields.TITLE,
+    filteredTerm = '',
+    filterOperator = FilterOperator.CONTAINS,
+    sortDirection = SortDirection.ASC,
+    conditions = null,
+  }: { field: ItemFields } & GetAllProps) {
     try {
-      const response = await this.itemRepository.findBy(conditions);
+      const findQuery = this.appService.getFilteredQuery({
+        field,
+        filteredTerm,
+        filterOperator,
+        sortDirection,
+        conditions,
+      });
+
+      if (!findQuery) {
+        return {
+          message:
+            'The inputs (field, filterOperator, filteredTerm) must be consistent',
+          data: null,
+          status: 400,
+        };
+      }
+
+      const response = await this.itemRepository.find(findQuery);
 
       return {
         message: response.length

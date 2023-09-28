@@ -12,12 +12,10 @@ create a (DockerFile) and (docker-compose.yml)
 
 
 ## Filters in backend
-like (get items which their titles starts-with/contains a string)
-
+done
 
 ## Sorting in backend
-like (get items sorted by their titles ascending)
-
+done
 
 ## Pagination in backend
 return the data rows as pages of 25 items at a time (25 is the default, we can give it 50, 75, 100)
@@ -52,8 +50,7 @@ we need to send all data with the requested language
 
 
 ## Admin panel (dashboard)
-- make a table (access levels for users)
-- make a special endpoints for admins only
+done
 
 
 ## Testing

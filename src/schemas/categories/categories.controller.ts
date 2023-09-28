@@ -11,7 +11,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiQuery } from '@nestjs/swagger';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -23,19 +22,37 @@ import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decora
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { updateCategoryBody } from './dto/update-category.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { CategoryFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
 
 @ControllerWrapper('categories')
 export class CategoriesController {
   constructor(private readonly categoriesService: CategoriesService) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: CategoryFields,
+  })
   async getCategories(
-    @Query() conditions: Record<string, any>,
+    @Query() query: { field: CategoryFields } & GetAllProps,
     @Res() res: Response,
   ) {
+    const {
+      field,
+      filteredTerm,
+      filterOperator,
+      sortDirection,
+      ...conditions
+    } = query;
     const response: CustomResponseDto =
-      await this.categoriesService.getCategories(conditions);
+      await this.categoriesService.getCategories({
+        field,
+        filteredTerm,
+        filterOperator,
+        sortDirection,
+        conditions,
+      });
 
     return res.status(response.status).json(response);
   }

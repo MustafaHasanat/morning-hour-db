@@ -11,7 +11,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
-import { ApiQuery } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
@@ -23,19 +22,45 @@ import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decora
 import { UpdateItemDto } from './dto/update-item.dto';
 import { updateItemBody } from './dto/update-item.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { ItemFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
 
 @ControllerWrapper('items')
 export class ItemsController {
   constructor(private readonly itemsService: ItemsService) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: ItemFields,
+  })
   async getItems(
-    @Query() conditions: Record<string, any>,
+    @Query() query: { field: ItemFields } & GetAllProps,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.itemsService.getItems(conditions);
+    const {
+      field,
+      filteredTerm,
+      sortDirection,
+      filterOperator,
+      ...conditions
+    } = query;
+
+    // if (typeof filteredTerm === 'string') {
+    //   // If it's a string, use it as-is
+    //   parsedValue = filteredTerm;
+    // } else if (typeof filteredTerm === 'number') {
+    //   // If it's a number, parse it as a number
+    //   parsedValue = parseInt(filteredTerm.toString(), 10); // Convert to integer
+    // }
+
+    const response: CustomResponseDto = await this.itemsService.getItems({
+      field,
+      filteredTerm,
+      sortDirection,
+      filterOperator,
+      conditions,
+    });
 
     return res.status(response.status).json(response);
   }
