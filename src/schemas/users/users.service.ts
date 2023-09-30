@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import { FullTokenPayload, TokenPayload } from 'src/types/token-payload.type';
 import { Request } from 'express';
 import { UserRole } from 'src/enums/user-role.enum';
+import { CustomResponseType } from 'src/types/custom-response.type';
 
 @Injectable()
 export class UsersService {
@@ -20,10 +21,10 @@ export class UsersService {
     private jwtService: JwtService,
   ) {}
 
-  private passwordRemover(user: User) {
+  private passwordRemover(user: User): User {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...rest } = user;
-    return rest;
+    return rest as User;
   }
 
   getUserTokenData(req: Request) {
@@ -38,7 +39,10 @@ export class UsersService {
     return userTokenData;
   }
 
-  async getUsers(conditions: Record<string, any>, withPass: boolean = false) {
+  async getUsers(
+    conditions: Record<string, any>,
+    withPass: boolean = false,
+  ): Promise<CustomResponseType<User[]>> {
     try {
       const response = await this.userRepository.findBy(conditions);
 
@@ -51,7 +55,7 @@ export class UsersService {
         message: response.length
           ? 'Users have been found'
           : 'Users list is empty',
-        data: updatedUsers,
+        data: updatedUsers as User[],
         status: 200,
       };
     } catch (error) {
@@ -59,7 +63,7 @@ export class UsersService {
     }
   }
 
-  async getUserById(id: string) {
+  async getUserById(id: string): Promise<CustomResponseType<User>> {
     try {
       const response = await this.userRepository.findOneBy({ id });
 
@@ -84,7 +88,7 @@ export class UsersService {
   async createUser(
     createUserDto: CreateUserDto,
     userTokenData: FullTokenPayload,
-  ) {
+  ): Promise<CustomResponseType<User>> {
     try {
       if (
         createUserDto.role === UserRole.ADMIN &&
@@ -93,7 +97,7 @@ export class UsersService {
         return {
           message:
             'Unauthorized entrance, you must be an admin to create another admin account',
-          data: { token: userTokenData },
+          data: null,
           status: 401,
         };
       }
@@ -125,13 +129,13 @@ export class UsersService {
     id: string,
     updateUserDto: UpdateUserDto,
     userTokenData: FullTokenPayload,
-  ) {
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       const user = await this.getUserById(id);
       if (!user) {
         return {
-          message: 'Invalid data',
-          data: `Provided user does not exist`,
+          message: `Provided user does not exist`,
+          data: null,
           status: 404,
         };
       }
@@ -143,7 +147,7 @@ export class UsersService {
         return {
           message:
             "Unauthorized entrance, you're only allowed to update your account",
-          data: { token: userTokenData, id },
+          data: null,
           status: 401,
         };
       }
@@ -174,7 +178,7 @@ export class UsersService {
     }
   }
 
-  async deleteAllUsers() {
+  async deleteAllUsers(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.userRepository.query(
         `TRUNCATE TABLE "user" CASCADE;`,
@@ -193,13 +197,16 @@ export class UsersService {
     }
   }
 
-  async deleteUser(id: string, userTokenData: FullTokenPayload) {
+  async deleteUser(
+    id: string,
+    userTokenData: FullTokenPayload,
+  ): Promise<CustomResponseType<DeleteResult>> {
     try {
       const user = await this.getUserById(id);
       if (user.status === 404) {
         return {
-          message: "User doesn't exist",
-          data: user,
+          message: `User ${id} doesn't exist`,
+          data: null,
           status: 404,
         };
       }
@@ -211,7 +218,7 @@ export class UsersService {
         return {
           message:
             "Unauthorized entrance, you're only allowed to delete your account",
-          data: { token: userTokenData, id },
+          data: null,
           status: 401,
         };
       }
@@ -232,7 +239,10 @@ export class UsersService {
     }
   }
 
-  async logIn(email: string, password: string) {
+  async logIn(
+    email: string,
+    password: string,
+  ): Promise<CustomResponseType<string>> {
     try {
       const response = await this.getUsers({ email }, true);
       if (response?.data?.length === 0) {

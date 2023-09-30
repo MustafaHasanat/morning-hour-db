@@ -3,10 +3,11 @@ import { Author } from 'src/schemas/authors/entities/author.entity';
 import { Category } from 'src/schemas/categories/entities/category.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
-import { User } from 'src/schemas/users/entities/user.entity';
+// import { User } from 'src/schemas/users/entities/user.entity';
 import {
   Column,
   Entity,
+  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -67,29 +68,24 @@ export class Item {
 
   // relations:
   @ManyToOne(() => Category, (category) => category.items)
-  @Column({
-    nullable: true,
-  })
-  categoryId: string;
+  category: Category;
 
   @ManyToOne(() => Author, (author) => author.items)
-  @Column({
-    nullable: true,
-  })
-  authorId: string;
+  author: Author;
+
+  @OneToMany(() => Review, (review) => review.item)
+  reviews: Review[];
 
   @ManyToMany(() => Order, (order) => order.items)
-  orders: string[];
+  @JoinTable()
+  orders: Order[];
 
-  @OneToMany(() => Review, (review) => review.itemId)
-  reviews: string[];
+  // @ManyToOne(() => User, (user) => user.recentVisited)
+  // userRecentVisited: string;
 
-  @ManyToOne(() => User, (user) => user.recentVisited)
-  userRecentVisited: string;
+  // @ManyToOne(() => User, (user) => user.wishlist)
+  // userWishlist: string;
 
-  @ManyToOne(() => User, (user) => user.wishlist)
-  userWishlist: string;
-
-  @ManyToOne(() => User, (user) => user.cart)
-  userCart: string;
+  // @ManyToOne(() => User, (user) => user.cart)
+  // userCart: string;
 }

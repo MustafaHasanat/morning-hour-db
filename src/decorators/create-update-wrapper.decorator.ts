@@ -6,6 +6,7 @@ export function CreateUpdateWrapper(dto: any, requestBody: { schema: any }) {
     ApiOkResponse({ type: dto }),
     UsePipes(ValidationPipe),
     ApiConsumes('multipart/form-data'),
+    ApiConsumes('application/json'),
     ApiBody(requestBody),
   );
 }

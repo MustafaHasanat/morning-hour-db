@@ -1,7 +1,7 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Item } from '../items/entities/item.entity';
-import { Repository } from 'typeorm';
+import { DeleteResult, In, Repository, UpdateResult } from 'typeorm';
 import { CreateItemDto } from '../items/dto/create-item.dto';
 import { UpdateItemDto } from '../items/dto/update-item.dto';
 import { AuthorsService } from '../authors/authors.service';
@@ -19,6 +19,7 @@ import {
 } from 'src/enums/sorting-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { AppService } from 'src/app.service';
+import { CustomResponseType } from 'src/types/custom-response.type';
 
 @Injectable()
 export class ItemsService {
@@ -38,7 +39,7 @@ export class ItemsService {
     filterOperator = FilterOperator.CONTAINS,
     sortDirection = SortDirection.ASC,
     conditions = null,
-  }: { field: ItemFields } & GetAllProps) {
+  }: { field: ItemFields } & GetAllProps): Promise<CustomResponseType<Item[]>> {
     try {
       const findQuery = this.appService.getFilteredQuery({
         field,
@@ -71,7 +72,33 @@ export class ItemsService {
     }
   }
 
-  async getItemById(id: string) {
+  async getItemsByIds(ids: string[]): Promise<CustomResponseType<Item[]>> {
+    try {
+      const response = await this.itemRepository.findBy({ id: In(ids) });
+
+      return {
+        message: response ? 'Items has been found' : "Items doesn't exist",
+        data: response,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
+  }
+
+  async getItemsByAuthorId(author: string): Promise<Item[]> {
+    return this.itemRepository.find({
+      where: { author: { id: author } },
+    });
+  }
+
+  async getItemsByOrderId(order: string): Promise<Item[]> {
+    return this.itemRepository.find({
+      where: { orders: { id: In([order]) } },
+    });
+  }
+
+  async getItemById(id: string): Promise<CustomResponseType<Item>> {
     try {
       const response = await this.itemRepository.findOneBy({ id });
       return {
@@ -84,7 +111,9 @@ export class ItemsService {
     }
   }
 
-  async createItem(createItemDto: CreateItemDto) {
+  async createItem(
+    createItemDto: CreateItemDto,
+  ): Promise<CustomResponseType<Item>> {
     try {
       // check the author and category
       const author = await this.authorsService.getAuthorById(
@@ -95,8 +124,8 @@ export class ItemsService {
       );
       if (!author || !category) {
         return {
-          message: 'Error occurred',
-          data: `Provided ${!author ? 'author' : 'category'} does not exist`,
+          message: `Provided ${!author ? 'author' : 'category'} does not exist`,
+          data: null,
           status: 400,
         };
       }
@@ -125,7 +154,10 @@ export class ItemsService {
     }
   }
 
-  async updateItem(id: string, updateItemDto: UpdateItemDto) {
+  async updateItem(
+    id: string,
+    updateItemDto: UpdateItemDto,
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       const item = await this.getItemById(id);
       const author = await this.authorsService.getAuthorById(
@@ -137,10 +169,10 @@ export class ItemsService {
 
       if (!item || !author || !category) {
         return {
-          message: 'Invalid data',
-          data: `Provided ${
+          message: `Provided ${
             !item ? 'item' : !author ? 'author' : 'category'
           } does not exist`,
+          data: null,
           status: 404,
         };
       }
@@ -181,7 +213,7 @@ export class ItemsService {
     }
   }
 
-  async deleteAllItems() {
+  async deleteAllItems(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.itemRepository.query(
         'TRUNCATE TABLE item CASCADE;',
@@ -200,13 +232,13 @@ export class ItemsService {
     }
   }
 
-  async deleteItem(id: string) {
+  async deleteItem(id: string): Promise<CustomResponseType<DeleteResult>> {
     try {
       const item = await this.getItemById(id);
       if (item.status === 404) {
         return {
-          message: "Item doesn't exist",
-          data: item,
+          message: `Item ${id} doesn't exist`,
+          data: null,
           status: 404,
         };
       }

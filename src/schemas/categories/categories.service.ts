@@ -1,7 +1,7 @@
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Like, Repository } from 'typeorm';
+import { DeleteResult, Like, Repository, UpdateResult } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
@@ -12,6 +12,7 @@ import {
   SortDirection,
 } from 'src/enums/sorting-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
+import { CustomResponseType } from 'src/types/custom-response.type';
 
 @Injectable()
 export class CategoriesService {
@@ -26,7 +27,9 @@ export class CategoriesService {
     filterOperator = FilterOperator.CONTAINS,
     sortDirection = SortDirection.ASC,
     conditions = null,
-  }: { field: CategoryFields } & GetAllProps) {
+  }: { field: CategoryFields } & GetAllProps): Promise<
+    CustomResponseType<Category[]>
+  > {
     try {
       const response = await this.categoryRepository.find({
         where: !!!Object.keys(conditions).length
@@ -47,7 +50,7 @@ export class CategoriesService {
     }
   }
 
-  async getCategoryById(id: string) {
+  async getCategoryById(id: string): Promise<CustomResponseType<Category>> {
     try {
       const response = await this.categoryRepository.findOneBy({ id });
       return {
@@ -62,7 +65,9 @@ export class CategoriesService {
     }
   }
 
-  async createCategory(createCategoryDto: CreateCategoryDto) {
+  async createCategory(
+    createCategoryDto: CreateCategoryDto,
+  ): Promise<CustomResponseType<Category>> {
     try {
       const newCategory = this.categoryRepository.create({
         ...createCategoryDto,
@@ -84,13 +89,16 @@ export class CategoriesService {
     }
   }
 
-  async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
+  async updateCategory(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       const category = await this.getCategoryById(id);
       if (!category) {
         return {
-          message: 'Invalid data',
-          data: `Category '${id}' doesn't exist`,
+          message: `Category '${id}' doesn't exist`,
+          data: null,
           status: 404,
         };
       }
@@ -121,7 +129,7 @@ export class CategoriesService {
     }
   }
 
-  async deleteAllCategories() {
+  async deleteAllCategories(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.categoryRepository.query(
         'TRUNCATE TABLE category CASCADE;',
@@ -140,13 +148,13 @@ export class CategoriesService {
     }
   }
 
-  async deleteCategory(id: string) {
+  async deleteCategory(id: string): Promise<CustomResponseType<DeleteResult>> {
     try {
       const category = await this.getCategoryById(id);
       if (category.status === 404) {
         return {
-          message: "Category doesn't exist",
-          data: category,
+          message: `Category ${id} doesn't exist`,
+          data: null,
           status: 404,
         };
       }

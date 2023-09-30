@@ -1,6 +1,6 @@
 import { Inject, Injectable, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Author } from './entities/author.entity';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
@@ -14,6 +14,7 @@ import {
 } from 'src/enums/sorting-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { AppService } from 'src/app.service';
+import { CustomResponseType } from 'src/types/custom-response.type';
 
 @Injectable()
 export class AuthorsService {
@@ -32,7 +33,9 @@ export class AuthorsService {
     filterOperator = FilterOperator.CONTAINS,
     sortDirection = SortDirection.ASC,
     conditions = null,
-  }: { field: AuthorFields } & GetAllProps) {
+  }: { field: AuthorFields } & GetAllProps): Promise<
+    CustomResponseType<Author[]>
+  > {
     try {
       const findQuery = this.appService.getFilteredQuery({
         field,
@@ -65,7 +68,7 @@ export class AuthorsService {
     }
   }
 
-  async getAuthorById(id: string) {
+  async getAuthorById(id: string): Promise<CustomResponseType<Author>> {
     try {
       const response = await this.authorRepository.findOneBy({ id });
       return {
@@ -78,7 +81,9 @@ export class AuthorsService {
     }
   }
 
-  async createAuthor(createAuthorDto: CreateAuthorDto) {
+  async createAuthor(
+    createAuthorDto: CreateAuthorDto,
+  ): Promise<CustomResponseType<Author>> {
     try {
       const newAuthor = this.authorRepository.create({
         ...createAuthorDto,
@@ -100,13 +105,16 @@ export class AuthorsService {
     }
   }
 
-  async updateAuthor(id: string, updateAuthorDto: UpdateAuthorDto) {
+  async updateAuthor(
+    id: string,
+    updateAuthorDto: UpdateAuthorDto,
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       const author = await this.getAuthorById(id);
       if (!author) {
         return {
-          message: 'Invalid data',
-          data: `Author '${id}' doesn't exist`,
+          message: `Author '${id}' doesn't exist`,
+          data: null,
           status: 404,
         };
       }
@@ -135,7 +143,7 @@ export class AuthorsService {
     }
   }
 
-  async deleteAllAuthors() {
+  async deleteAllAuthors(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.authorRepository.query(
         'TRUNCATE TABLE author CASCADE;',
@@ -154,13 +162,13 @@ export class AuthorsService {
     }
   }
 
-  async deleteAuthor(id: string) {
+  async deleteAuthor(id: string): Promise<CustomResponseType<DeleteResult>> {
     try {
       const author = await this.getAuthorById(id);
       if (author.status === 404) {
         return {
-          message: "Author doesn't exist",
-          data: author,
+          message: `Author ${id} doesn't exist`,
+          data: null,
           status: 404,
         };
       }

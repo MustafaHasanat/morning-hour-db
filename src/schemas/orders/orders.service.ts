@@ -2,11 +2,15 @@
 import { UsersService } from './../users/users.service';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Order } from './entities/order.entity';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
+import { User } from '../users/entities/user.entity';
+import { ItemsService } from '../items/items.service';
+import { CustomResponseType } from 'src/types/custom-response.type';
+import { OrderFields } from 'src/enums/sorting-fields.enum';
 
 @Injectable()
 export class OrdersService {
@@ -14,9 +18,12 @@ export class OrdersService {
     @InjectRepository(Order)
     private readonly orderRepository: Repository<Order>,
     private readonly usersService: UsersService,
+    private readonly itemsService: ItemsService,
   ) {}
 
-  async getOrders(conditions: Record<string, any>) {
+  async getOrders(
+    conditions: Record<string, any>,
+  ): Promise<CustomResponseType<Order[]>> {
     try {
       const response = await this.orderRepository.findBy(conditions);
 
@@ -32,12 +39,14 @@ export class OrdersService {
     }
   }
 
-  async getOrderById(id: string) {
+  async getOrderById(id: string): Promise<CustomResponseType<Order>> {
     try {
       const response = await this.orderRepository.findOneBy({ id });
+      const items = await this.itemsService.getItemsByOrderId(id);
+
       return {
         message: response ? 'Order has been found' : "Order doesn't exist",
-        data: response,
+        data: { ...response, items },
         status: response ? 200 : 404,
       };
     } catch (error) {
@@ -45,20 +54,27 @@ export class OrdersService {
     }
   }
 
-  async createOrder(createOrderDto: CreateOrderDto) {
+  async createOrder(
+    createOrderDto: CreateOrderDto,
+  ): Promise<CustomResponseType<Order>> {
     try {
       // check the user
-      const user = await this.usersService.getUserById(createOrderDto.userId);
-      if (!user) {
+      const user = await this.usersService.getUserById(createOrderDto.user);
+      if (!user.data) {
         return {
-          message: 'Error occurred',
-          data: 'Provided user does not exist',
-          status: 400,
+          message: 'Provided user does not exist',
+          data: null,
+          status: 404,
         };
       }
 
+      const items = await this.itemsService.getItemsByIds(createOrderDto.items);
+
       // create the order
-      const newOrder = this.orderRepository.create(createOrderDto);
+      const newOrder = this.orderRepository.create();
+      newOrder.user = user.data as User;
+      newOrder.items = items.data;
+
       const response = await this.orderRepository.save(newOrder);
 
       return {
@@ -75,15 +91,18 @@ export class OrdersService {
     }
   }
 
-  async updateOrder(id: string, updateOrderDto: UpdateOrderDto) {
+  async updateOrder(
+    id: string,
+    updateOrderDto: UpdateOrderDto,
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       const order = await this.getOrderById(id);
-      const user = await this.usersService.getUserById(updateOrderDto.userId);
+      const user = await this.usersService.getUserById(updateOrderDto.user);
 
       if (!order || !user) {
         return {
-          message: 'Invalid data',
-          data: `Provided ${!order ? 'order' : 'user'} does not exist`,
+          message: `Provided ${!order ? 'order' : 'user'} does not exist`,
+          data: null,
           status: 400,
         };
       }
@@ -109,7 +128,7 @@ export class OrdersService {
     }
   }
 
-  async deleteAllOrders() {
+  async deleteAllOrders(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.orderRepository.query(
         `TRUNCATE TABLE "order" CASCADE;`,
@@ -124,7 +143,7 @@ export class OrdersService {
     }
   }
 
-  async deleteOrder(id: string) {
+  async deleteOrder(id: string): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.orderRepository.delete(id);
       return {
