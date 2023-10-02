@@ -7,11 +7,7 @@ import { UpdateAuthorDto } from './dto/update-author.dto';
 import { ItemsService } from '../items/items.service';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
-import {
-  AuthorFields,
-  FilterOperator,
-  SortDirection,
-} from 'src/enums/sorting-fields.enum';
+import { AuthorFields } from 'src/enums/sorting-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { AppService } from 'src/app.service';
 import { CustomResponseType } from 'src/types/custom-response.type';
@@ -27,28 +23,30 @@ export class AuthorsService {
     private readonly itemsService: ItemsService,
   ) {}
 
+  // {
+  //   field = AuthorFields.NAME,
+  //   filteredTerm = '',
+  //   filterOperator = FilterOperator.CONTAINS,
+  //   sortDirection = SortDirection.ASC,
+  //   conditions = null,
+  // }
+
   async getAuthors({
-    field = AuthorFields.NAME,
-    filteredTerm = '',
-    filterOperator = FilterOperator.CONTAINS,
-    sortDirection = SortDirection.ASC,
-    conditions = null,
-  }: { field: AuthorFields } & GetAllProps): Promise<
-    CustomResponseType<Author[]>
-  > {
+    sortBy,
+    reverse,
+    conditions,
+  }: GetAllProps<AuthorFields>): Promise<CustomResponseType<Author[]>> {
     try {
       const findQuery = this.appService.getFilteredQuery({
-        field,
-        filteredTerm,
-        filterOperator,
-        sortDirection,
         conditions,
+        sortBy,
+        reverse,
       });
 
       if (!findQuery) {
         return {
           message:
-            'The inputs (field, filterOperator, filteredTerm) must be consistent',
+            'The inputs (field, filterOperator, filteredTerm.dataType, filteredTerm.value) must be consistent',
           data: null,
           status: 400,
         };

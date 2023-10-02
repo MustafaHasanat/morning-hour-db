@@ -21,21 +21,15 @@ export class CategoriesService {
     private readonly categoryRepository: Repository<Category>,
   ) {}
 
-  async getCategories({
-    field = CategoryFields.TITLE,
-    filteredTerm = '',
-    filterOperator = FilterOperator.CONTAINS,
-    sortDirection = SortDirection.ASC,
-    conditions = null,
-  }: { field: CategoryFields } & GetAllProps): Promise<
-    CustomResponseType<Category[]>
-  > {
+  async getCategories(
+    conditions: GetAllProps<CategoryFields>,
+  ): Promise<CustomResponseType<Category[]>> {
     try {
       const response = await this.categoryRepository.find({
-        where: !!!Object.keys(conditions).length
-          ? { [field]: Like(`%${filteredTerm}%`) }
-          : conditions,
-        order: { [field]: sortDirection },
+        // where: !!!Object.keys(conditions).length
+        //   ? { [field]: Like(`%${filteredTerm}%`) }
+        //   : conditions,
+        // order: { [field]: sortDirection },
       });
 
       return {

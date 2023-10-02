@@ -12,11 +12,7 @@ import {
   filterNullsObject,
 } from 'src/utils/helpers/filterNulls';
 import { mergeWithoutDups } from 'src/utils/helpers/mergeWithoutDups';
-import {
-  FilterOperator,
-  ItemFields,
-  SortDirection,
-} from 'src/enums/sorting-fields.enum';
+import { ItemFields } from 'src/enums/sorting-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { AppService } from 'src/app.service';
 import { CustomResponseType } from 'src/types/custom-response.type';
@@ -34,19 +30,15 @@ export class ItemsService {
   ) {}
 
   async getItems({
-    field = ItemFields.TITLE,
-    filteredTerm = '',
-    filterOperator = FilterOperator.CONTAINS,
-    sortDirection = SortDirection.ASC,
-    conditions = null,
-  }: { field: ItemFields } & GetAllProps): Promise<CustomResponseType<Item[]>> {
+    sortBy,
+    reverse,
+    conditions,
+  }: GetAllProps<ItemFields>): Promise<CustomResponseType<Item[]>> {
     try {
       const findQuery = this.appService.getFilteredQuery({
-        field,
-        filteredTerm,
-        filterOperator,
-        sortDirection,
         conditions,
+        sortBy,
+        reverse,
       });
 
       if (!findQuery) {

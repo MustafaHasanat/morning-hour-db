@@ -21,7 +21,10 @@ import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decora
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
 import { AuthorFields } from 'src/enums/sorting-fields.enum';
-import { GetAllProps } from 'src/types/get-operators.type';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
 
 @ControllerWrapper('authors')
 export class AuthorsController {
@@ -32,24 +35,26 @@ export class AuthorsController {
     fieldsEnum: AuthorFields,
   })
   async getAuthors(
-    @Query() query: { field: AuthorFields } & GetAllProps,
+    @Query()
+    query: GetQueryProps<AuthorFields>,
     @Res() res: Response,
   ) {
-    const {
-      field,
-      sortDirection,
-      filteredTerm,
-      filterOperator,
-      ...conditions
-    } = query;
-    const response: CustomResponseDto = await this.authorsService.getAuthors({
-      field,
-      sortDirection,
-      conditions,
-      filteredTerm,
-      filterOperator,
-    });
+    const { sortBy, reverse, conditions } = query;
+    let parsed: GetConditionsProps<AuthorFields>[] = [];
 
+    if (conditions) {
+      try {
+        parsed = conditions.map((condition) => JSON.parse(condition));
+      } catch (error) {
+        parsed = [JSON.parse(`${conditions}`)];
+      }
+    }
+
+    const response: CustomResponseDto = await this.authorsService.getAuthors({
+      conditions: parsed,
+      sortBy,
+      reverse: reverse === 'true',
+    });
     return res.status(response.status).json(response);
   }
 

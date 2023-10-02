@@ -1,8 +1,22 @@
-import { FilterOperator, SortDirection } from 'src/enums/sorting-fields.enum';
+import { FilterOperator } from 'src/enums/sorting-fields.enum';
 
-export interface GetAllProps {
-  filteredTerm: string | number;
+export type GetConditionsProps<fieldType> = {
+  filteredTerm: {
+    dataType: 'string' | 'number';
+    value: string | number;
+  };
   filterOperator: FilterOperator;
-  sortDirection: SortDirection;
-  conditions: Record<string, any>;
-}
+  field: fieldType;
+};
+
+export type GetAllProps<fieldType> = {
+  conditions: GetConditionsProps<fieldType>[];
+  sortBy: fieldType;
+  reverse: boolean;
+};
+
+export type GetQueryProps<fieldType> = {
+  sortBy: fieldType;
+  reverse: string;
+  conditions: string[];
+};

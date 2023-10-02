@@ -32,27 +32,17 @@ export class CategoriesController {
 
   @Get()
   @GetAllWrapper({
-    fieldsEnum: CategoryFields,
+    fieldsEnum: [CategoryFields.TITLE],
   })
   async getCategories(
-    @Query() query: { field: CategoryFields } & GetAllProps,
+    @Query()
+    query: {
+      conditions: GetAllProps<CategoryFields>;
+    },
     @Res() res: Response,
   ) {
-    const {
-      field,
-      filteredTerm,
-      filterOperator,
-      sortDirection,
-      ...conditions
-    } = query;
     const response: CustomResponseDto =
-      await this.categoriesService.getCategories({
-        field,
-        filteredTerm,
-        filterOperator,
-        sortDirection,
-        conditions,
-      });
+      await this.categoriesService.getCategories(query.conditions);
 
     return res.status(response.status).json(response);
   }

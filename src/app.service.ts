@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import {
   AuthorFields,
@@ -6,6 +7,7 @@ import {
   ItemFields,
   OrderFields,
   ReviewFields,
+  SortDirection,
   UserFields,
 } from './enums/sorting-fields.enum';
 import { GetAllProps } from './types/get-operators.type';
@@ -16,6 +18,7 @@ import {
   MoreThanOrEqual,
   LessThanOrEqual,
   Equal,
+  FindManyOptions,
 } from 'typeorm';
 
 @Injectable()
@@ -31,41 +34,47 @@ export class AppService {
   }
 
   getFilteredQuery({
-    field,
-    filteredTerm,
-    filterOperator,
-    sortDirection,
+    sortBy,
+    reverse,
     conditions,
-  }: {
-    field:
-      | AuthorFields
-      | CategoryFields
-      | ItemFields
-      | OrderFields
-      | ReviewFields
-      | UserFields;
-  } & GetAllProps) {
-    const isConditions = !!Object.keys(conditions).length;
+  }: GetAllProps<
+    | AuthorFields
+    | CategoryFields
+    | ItemFields
+    | OrderFields
+    | ReviewFields
+    | UserFields
+  >): FindManyOptions {
+    try {
+      const whereQuery = {};
 
-    const isNumber = [
-      FilterOperator.MORE,
-      FilterOperator.MORE_EQ,
-      FilterOperator.LESS,
-      FilterOperator.LESS_EQ,
-      FilterOperator.EQUALS,
-    ].includes(filterOperator);
+      conditions.forEach((condition) => {
+        const {
+          field,
+          filterOperator,
+          filteredTerm: { dataType, value },
+        } = condition;
 
-    if (isNumber && typeof filteredTerm === 'string') {
-      return null;
+        const isNumber = ![FilterOperator.CONTAINS].includes(filterOperator);
+
+        if (isNumber && dataType === 'string') {
+          return null;
+        }
+
+        const where = isNumber
+          ? { [field]: this.mappedOperators(value as number) }
+          : { [field]: Like(`%${value}%`) };
+
+        whereQuery[field] = where[field];
+      });
+
+      return {
+        where: { ...whereQuery },
+        order: { [sortBy]: reverse ? SortDirection.DESC : SortDirection.ASC },
+      };
+    } catch (error) {
+      console.log(error);
+      return {};
     }
-
-    const where = isNumber
-      ? { [field]: this.mappedOperators(filteredTerm as number) }
-      : { [field]: Like(`%${filteredTerm}%`) };
-
-    return {
-      where: !isConditions ? where : conditions,
-      order: { [field]: sortDirection },
-    };
   }
 }

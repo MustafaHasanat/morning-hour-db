@@ -24,7 +24,7 @@ import { updateItemBody } from './dto/update-item.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
 import { ItemFields } from 'src/enums/sorting-fields.enum';
-import { GetAllProps } from 'src/types/get-operators.type';
+import { GetConditionsProps } from 'src/types/get-operators.type';
 
 @ControllerWrapper('items')
 export class ItemsController {
@@ -32,34 +32,38 @@ export class ItemsController {
 
   @Get()
   @GetAllWrapper({
-    fieldsEnum: ItemFields,
+    fieldsEnum: [
+      ItemFields.CURRENT_PRICE,
+      ItemFields.DESCRIPTION,
+      ItemFields.OLD_PRICE,
+      ItemFields.PRIMARY_COLOR,
+      ItemFields.TITLE,
+    ],
   })
   async getItems(
-    @Query() query: { field: ItemFields } & GetAllProps,
+    @Query()
+    query: {
+      sortBy: ItemFields;
+      reverse: boolean;
+      conditions: string[];
+    },
     @Res() res: Response,
   ) {
-    const {
-      field,
-      filteredTerm,
-      sortDirection,
-      filterOperator,
-      ...conditions
-    } = query;
+    const { sortBy, reverse, conditions } = query;
+    let parsed: GetConditionsProps<ItemFields>[] = [];
 
-    // if (typeof filteredTerm === 'string') {
-    //   // If it's a string, use it as-is
-    //   parsedValue = filteredTerm;
-    // } else if (typeof filteredTerm === 'number') {
-    //   // If it's a number, parse it as a number
-    //   parsedValue = parseInt(filteredTerm.toString(), 10); // Convert to integer
-    // }
+    if (conditions) {
+      try {
+        parsed = conditions.map((condition) => JSON.parse(condition));
+      } catch (error) {
+        parsed = [JSON.parse(`${conditions}`)];
+      }
+    }
 
     const response: CustomResponseDto = await this.itemsService.getItems({
-      field,
-      filteredTerm,
-      sortDirection,
-      filterOperator,
-      conditions,
+      conditions: parsed,
+      sortBy,
+      reverse,
     });
 
     return res.status(response.status).json(response);
