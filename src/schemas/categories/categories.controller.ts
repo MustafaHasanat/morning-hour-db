@@ -11,7 +11,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiQuery } from '@nestjs/swagger';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
@@ -23,20 +22,41 @@ import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decora
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { updateCategoryBody } from './dto/update-category.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { CategoryFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: CategoryFields,
+  })
   async getCategories(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<CategoryFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.categoriesService.getCategories(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<CategoryFields>[] =
+      this.appService.validateGetConditions<CategoryFields>(conditions);
 
+    const response: CustomResponseDto =
+      await this.categoriesService.getCategories({
+        sortBy: sortBy || CategoryFields.TITLE,
+        reverse: reverse === 'true',
+        page: Number(page),
+        conditions: parsed || [],
+      });
     return res.status(response.status).json(response);
   }
 

@@ -8,7 +8,6 @@ import {
   Query,
   Res,
 } from '@nestjs/common';
-import { ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ReviewsService } from './reviews.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
@@ -20,20 +19,40 @@ import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decora
 import { updateReviewBody } from './dto/update-review.body';
 import { MembersOnly } from 'src/decorators/members.decorator';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { ReviewFields } from 'src/enums/sorting-fields.enum';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: ReviewFields,
+  })
   async getReviews(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<ReviewFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.reviewsService.getReviews(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<ReviewFields>[] =
+      this.appService.validateGetConditions<ReviewFields>(conditions);
 
+    const response: CustomResponseDto = await this.reviewsService.getReviews({
+      sortBy: sortBy || ReviewFields.TEXT,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 

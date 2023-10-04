@@ -9,7 +9,6 @@ import {
   Res,
   Query,
 } from '@nestjs/common';
-import { ApiQuery } from '@nestjs/swagger';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
@@ -20,20 +19,40 @@ import { updateAuthorBody } from './dto/update-author.body';
 import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { AuthorFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('authors')
 export class AuthorsController {
-  constructor(private readonly authorsService: AuthorsService) {}
+  constructor(
+    private readonly authorsService: AuthorsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: AuthorFields,
+  })
   async getAuthors(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<AuthorFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.authorsService.getAuthors(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<AuthorFields>[] =
+      this.appService.validateGetConditions<AuthorFields>(conditions);
 
+    const response: CustomResponseDto = await this.authorsService.getAuthors({
+      sortBy: sortBy || AuthorFields.NAME,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 

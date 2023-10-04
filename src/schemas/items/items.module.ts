@@ -5,9 +5,11 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Item } from './entities/item.entity';
 import { AuthorsModule } from '../authors/authors.module';
 import { CategoriesModule } from '../categories/categories.module';
+import { AppModule } from 'src/app.module';
 
 @Module({
   imports: [
+    forwardRef(() => AppModule),
     forwardRef(() => AuthorsModule),
     CategoriesModule,
     TypeOrmModule.forFeature([Item]),

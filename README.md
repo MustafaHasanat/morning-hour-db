@@ -12,21 +12,17 @@ create a (DockerFile) and (docker-compose.yml)
 
 
 ## Filters in backend
-like (get items which their titles starts-with/contains a string)
-
+done
 
 ## Sorting in backend
-like (get items sorted by their titles ascending)
-
+done
 
 ## Pagination in backend
-return the data rows as pages of 25 items at a time (25 is the default, we can give it 50, 75, 100)
-this will be applied to all endpoints that return data (the GET requests)
+done
 
 
 ## Error handling 
-never return 500, return specified codes for all possible scenarios 
-
+done
 
 ## Notification
 - add a new column (notification) that will be linked to each user (many-to-one) which represents a 
@@ -43,7 +39,7 @@ notification for that user like (welcome message after signing-in, someone edite
 
 ## Email service
 - add a password reset
-- we need an email service using an email service (use node mailer, send grid)
+- we need an email service using an email provider (use node mailer or send grid)
 - we will use it to send confirmation emails to users
 
 
@@ -52,8 +48,7 @@ we need to send all data with the requested language
 
 
 ## Admin panel (dashboard)
-- make a table (access levels for users)
-- make a special endpoints for admins only
+done
 
 
 ## Testing

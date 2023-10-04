@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   BadRequestException,
   CanActivate,
@@ -12,7 +11,6 @@ import { Request } from 'express';
 import { UserRole } from 'src/enums/user-role.enum';
 import { User } from 'src/schemas/users/entities/user.entity';
 import { UsersService } from 'src/schemas/users/users.service';
-import { TokenPayload } from 'src/types/token-payload.type';
 import constants from 'src/utils/constants/auth.constants';
 
 @Injectable()

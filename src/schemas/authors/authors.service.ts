@@ -1,26 +1,49 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Author } from './entities/author.entity';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
-import { ItemsService } from '../items/items.service';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
+import { AuthorFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
+import { CustomResponseType } from 'src/types/custom-response.type';
 
 @Injectable()
 export class AuthorsService {
   constructor(
     @InjectRepository(Author)
     private readonly authorRepository: Repository<Author>,
-
-    @Inject(forwardRef(() => ItemsService))
-    private readonly itemsService: ItemsService,
+    private readonly appService: AppService,
   ) {}
+  // @Inject(forwardRef(() => ItemsService))
+  // private readonly itemsService: ItemsService,
 
-  async getAuthors(conditions: Record<string, any>) {
+  async getAuthors({
+    sortBy = AuthorFields.NAME,
+    reverse = false,
+    page = 1,
+    conditions,
+  }: GetAllProps<AuthorFields>): Promise<CustomResponseType<Author[]>> {
     try {
-      const response = await this.authorRepository.findBy(conditions);
+      const findQuery = this.appService.filteredGetQuery({
+        conditions,
+        sortBy,
+        page,
+        reverse,
+      });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.authorRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -34,7 +57,7 @@ export class AuthorsService {
     }
   }
 
-  async getAuthorById(id: string) {
+  async getAuthorById(id: string): Promise<CustomResponseType<Author>> {
     try {
       const response = await this.authorRepository.findOneBy({ id });
       return {
@@ -47,7 +70,9 @@ export class AuthorsService {
     }
   }
 
-  async createAuthor(createAuthorDto: CreateAuthorDto) {
+  async createAuthor(
+    createAuthorDto: CreateAuthorDto,
+  ): Promise<CustomResponseType<Author>> {
     try {
       const newAuthor = this.authorRepository.create({
         ...createAuthorDto,
@@ -58,7 +83,7 @@ export class AuthorsService {
       return {
         message: 'Author has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {
@@ -69,13 +94,16 @@ export class AuthorsService {
     }
   }
 
-  async updateAuthor(id: string, updateAuthorDto: UpdateAuthorDto) {
+  async updateAuthor(
+    id: string,
+    updateAuthorDto: UpdateAuthorDto,
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       const author = await this.getAuthorById(id);
       if (!author) {
         return {
-          message: 'Invalid data',
-          data: `Author '${id}' doesn't exist`,
+          message: `Author '${id}' doesn't exist`,
+          data: null,
           status: 404,
         };
       }
@@ -104,7 +132,7 @@ export class AuthorsService {
     }
   }
 
-  async deleteAllAuthors() {
+  async deleteAllAuthors(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.authorRepository.query(
         'TRUNCATE TABLE author CASCADE;',
@@ -123,13 +151,13 @@ export class AuthorsService {
     }
   }
 
-  async deleteAuthor(id: string) {
+  async deleteAuthor(id: string): Promise<CustomResponseType<DeleteResult>> {
     try {
       const author = await this.getAuthorById(id);
       if (author.status === 404) {
         return {
-          message: "Author doesn't exist",
-          data: author,
+          message: `Author ${id} doesn't exist`,
+          data: null,
           status: 404,
         };
       }

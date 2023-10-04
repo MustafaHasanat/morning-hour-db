@@ -1,8 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { AuthorsService } from '../authors/authors.service';
-import { CategoriesService } from '../categories/categories.service';
-import { ItemsService } from '../items/items.service';
-import { UsersService } from '../users/users.service';
 import { Injectable } from '@nestjs/common';
 import { existsSync, readdir } from 'fs';
 import { join } from 'path';
@@ -10,12 +6,7 @@ import { promisify } from 'util';
 
 @Injectable()
 export class AssetsService {
-  constructor(
-    private readonly usersService: UsersService,
-    private readonly authorsService: AuthorsService,
-    private readonly categoriesService: CategoriesService,
-    private readonly itemsService: ItemsService,
-  ) {}
+  constructor() {}
 
   private readdirAsync = promisify(readdir);
 

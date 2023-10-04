@@ -15,7 +15,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
-import { ApiBody, ApiQuery } from '@nestjs/swagger';
+import { ApiBody } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
@@ -30,10 +30,20 @@ import { MembersOnly } from 'src/decorators/members.decorator';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { LoginUserDto } from './dto/login-user.dto';
 import { FullTokenPayload } from 'src/types/token-payload.type';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { UserFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('users')
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly appService: AppService,
+  ) {}
 
   getUserTokenData(req: Request): FullTokenPayload {
     return this.usersService.getUserTokenData(req);
@@ -41,17 +51,24 @@ export class UsersController {
 
   @Get()
   // @AdminsOnly()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: UserFields,
+  })
   async getUsers(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<UserFields>,
     @Res() res: Response,
-    @Req() req: Request,
   ) {
-    this.getUserTokenData(req);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<UserFields>[] =
+      this.appService.validateGetConditions<UserFields>(conditions);
 
-    const response: CustomResponseDto =
-      await this.usersService.getUsers(conditions);
-
+    const response: CustomResponseDto = await this.usersService.getUsers({
+      sortBy: sortBy || UserFields.USERNAME,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 
@@ -79,6 +96,12 @@ export class UsersController {
     const { email, password } = body;
     return this.usersService.logIn(email, password);
   }
+
+  // @Post('resetPassword')
+  // @HttpCode(HttpStatus.OK)
+  // resetPassword() {
+  //   return this.usersService.resetPassword();
+  // }
 
   @Post()
   @CreateUpdateWrapper(CreateUserDto, createUserBody)

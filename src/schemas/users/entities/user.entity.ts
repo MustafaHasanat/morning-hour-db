@@ -1,6 +1,6 @@
 import { UserGender } from 'src/enums/user-gender.enum';
 import { UserRole } from 'src/enums/user-role.enum';
-import { Item } from 'src/schemas/items/entities/item.entity';
+// import { Item } from 'src/schemas/items/entities/item.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
@@ -65,12 +65,6 @@ export class User {
   })
   address: string;
 
-  // @Column({
-  //   nullable: true,
-  //   type: 'simple-array',
-  // })
-  // paymentMethods: string[];
-
   @Column({
     nullable: true,
   })
@@ -78,27 +72,27 @@ export class User {
 
   // relations
 
-  @OneToMany(() => Order, (order) => order.userId)
-  orders: string[];
+  @OneToMany(() => Order, (order) => order.user)
+  orders: Order[];
 
-  @OneToMany(() => Review, (review) => review.userId)
-  reviews: string[];
+  @OneToMany(() => Review, (review) => review.user)
+  reviews: Review[];
 
-  @OneToMany(() => Item, (item) => item.userRecentVisited)
+  // @OneToMany(() => Item, (item) => item.userRecentVisited)
   @Column({
     type: 'simple-array',
     nullable: true,
   })
   recentVisited: string[];
 
-  @OneToMany(() => Item, (item) => item.userWishlist)
+  // @OneToMany(() => Item, (item) => item.userWishlist)
   @Column({
     type: 'simple-array',
     nullable: true,
   })
   wishlist: string[];
 
-  @OneToMany(() => Item, (item) => item.userCart)
+  // @OneToMany(() => Item, (item) => item.userCart)
   @Column({
     type: 'simple-json',
     nullable: true,

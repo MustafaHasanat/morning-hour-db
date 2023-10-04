@@ -11,7 +11,6 @@ import {
   Query,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
-import { ApiQuery } from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
@@ -23,20 +22,40 @@ import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decora
 import { UpdateItemDto } from './dto/update-item.dto';
 import { updateItemBody } from './dto/update-item.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { ItemFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('items')
 export class ItemsController {
-  constructor(private readonly itemsService: ItemsService) {}
+  constructor(
+    private readonly itemsService: ItemsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: ItemFields,
+  })
   async getItems(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<ItemFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.itemsService.getItems(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<ItemFields>[] =
+      this.appService.validateGetConditions<ItemFields>(conditions);
 
+    const response: CustomResponseDto = await this.itemsService.getItems({
+      sortBy: sortBy || ItemFields.TITLE,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 

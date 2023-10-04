@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -11,6 +11,10 @@ import { JwtService } from '@nestjs/jwt';
 import { FullTokenPayload, TokenPayload } from 'src/types/token-payload.type';
 import { Request } from 'express';
 import { UserRole } from 'src/enums/user-role.enum';
+import { CustomResponseType } from 'src/types/custom-response.type';
+import { GetAllProps } from 'src/types/get-operators.type';
+import { FilterOperator, UserFields } from 'src/enums/sorting-fields.enum';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class UsersService {
@@ -18,12 +22,13 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
+    private readonly appService: AppService,
   ) {}
 
-  private passwordRemover(user: User) {
+  private passwordRemover(user: User): User {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password, ...rest } = user;
-    return rest;
+    return rest as User;
   }
 
   getUserTokenData(req: Request) {
@@ -38,9 +43,32 @@ export class UsersService {
     return userTokenData;
   }
 
-  async getUsers(conditions: Record<string, any>, withPass: boolean = false) {
+  async getUsers({
+    sortBy = UserFields.USERNAME,
+    reverse = false,
+    page = 1,
+    withPass = false,
+    conditions = [],
+  }: GetAllProps<UserFields> & { withPass?: boolean }): Promise<
+    CustomResponseType<User[]>
+  > {
     try {
-      const response = await this.userRepository.findBy(conditions);
+      const findQuery = this.appService.filteredGetQuery({
+        conditions,
+        sortBy,
+        page,
+        reverse,
+      });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.userRepository.find(findQuery.data);
 
       // remove the password from all the users before sending response
       const updatedUsers = response.map((user) => {
@@ -59,7 +87,7 @@ export class UsersService {
     }
   }
 
-  async getUserById(id: string) {
+  async getUserById(id: string): Promise<CustomResponseType<User>> {
     try {
       const response = await this.userRepository.findOneBy({ id });
 
@@ -84,7 +112,7 @@ export class UsersService {
   async createUser(
     createUserDto: CreateUserDto,
     userTokenData: FullTokenPayload,
-  ) {
+  ): Promise<CustomResponseType<User>> {
     try {
       if (
         createUserDto.role === UserRole.ADMIN &&
@@ -93,7 +121,7 @@ export class UsersService {
         return {
           message:
             'Unauthorized entrance, you must be an admin to create another admin account',
-          data: { token: userTokenData },
+          data: null,
           status: 401,
         };
       }
@@ -110,7 +138,7 @@ export class UsersService {
       return {
         message: 'User has been created successfully',
         data: this.passwordRemover(response),
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {
@@ -125,13 +153,21 @@ export class UsersService {
     id: string,
     updateUserDto: UpdateUserDto,
     userTokenData: FullTokenPayload,
-  ) {
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
+      if (updateUserDto.password) {
+        return {
+          message: `You're not allowed to change your password from this endpoint`,
+          data: null,
+          status: 403,
+        };
+      }
+
       const user = await this.getUserById(id);
       if (!user) {
         return {
-          message: 'Invalid data',
-          data: `Provided user does not exist`,
+          message: `Provided user does not exist`,
+          data: null,
           status: 404,
         };
       }
@@ -143,7 +179,7 @@ export class UsersService {
         return {
           message:
             "Unauthorized entrance, you're only allowed to update your account",
-          data: { token: userTokenData, id },
+          data: null,
           status: 401,
         };
       }
@@ -174,7 +210,7 @@ export class UsersService {
     }
   }
 
-  async deleteAllUsers() {
+  async deleteAllUsers(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.userRepository.query(
         `TRUNCATE TABLE "user" CASCADE;`,
@@ -193,13 +229,16 @@ export class UsersService {
     }
   }
 
-  async deleteUser(id: string, userTokenData: FullTokenPayload) {
+  async deleteUser(
+    id: string,
+    userTokenData: FullTokenPayload,
+  ): Promise<CustomResponseType<DeleteResult>> {
     try {
       const user = await this.getUserById(id);
       if (user.status === 404) {
         return {
-          message: "User doesn't exist",
-          data: user,
+          message: `User ${id} doesn't exist`,
+          data: null,
           status: 404,
         };
       }
@@ -211,7 +250,7 @@ export class UsersService {
         return {
           message:
             "Unauthorized entrance, you're only allowed to delete your account",
-          data: { token: userTokenData, id },
+          data: null,
           status: 401,
         };
       }
@@ -232,10 +271,26 @@ export class UsersService {
     }
   }
 
-  async logIn(email: string, password: string) {
+  async logIn(
+    email: string,
+    password: string,
+  ): Promise<CustomResponseType<string>> {
     try {
-      const response = await this.getUsers({ email }, true);
-      if (response?.data?.length === 0) {
+      const response = await this.getUsers({
+        withPass: true,
+        conditions: [
+          {
+            filteredTerm: {
+              dataType: 'string',
+              value: email,
+            },
+            filterOperator: FilterOperator.CONTAINS,
+            field: UserFields.EMAIL,
+          },
+        ],
+      });
+
+      if (!response?.data?.length) {
         return {
           message: 'Invalid email',
           data: email,
@@ -272,4 +327,32 @@ export class UsersService {
       };
     }
   }
+
+  // async resetPassword(): Promise<CustomResponseType<any>> {
+  //   try {
+  //     const text = 'this is a test';
+
+  //     const data = {
+  //       to: 'mustfaaayyed@gmail.com',
+  //       from: 'mustafa.hasanat99@gmail.com',
+  //       subject: 'hello',
+  //       text,
+  //       html: `<strong>${text}</strong>`,
+  //     };
+
+  //     const response = await sendEmail(data);
+
+  //     return {
+  //       message: 'Password has been resat successfully',
+  //       data: response,
+  //       status: 200,
+  //     };
+  //   } catch (error) {
+  //     return {
+  //       message: 'Error occurred',
+  //       data: error,
+  //       status: 500,
+  //     };
+  //   }
+  // }
 }

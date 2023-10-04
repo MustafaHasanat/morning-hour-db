@@ -3,9 +3,9 @@ export const createOrderBody = {
   produces: ['application/json'],
   schema: {
     type: 'object',
-    required: ['userId', 'items'],
+    required: ['user', 'items'],
     properties: {
-      userId: { type: 'string' },
+      user: { type: 'string' },
       items: {
         type: 'array',
         items: {

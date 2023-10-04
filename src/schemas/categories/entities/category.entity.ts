@@ -21,6 +21,6 @@ export class Category {
   image: string;
 
   // relations:
-  @OneToMany(() => Item, (item) => item.categoryId)
-  items: string[];
+  @OneToMany(() => Item, (item) => item.category)
+  items: Item[];
 }

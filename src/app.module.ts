@@ -16,7 +16,7 @@ import { OrdersModule } from './schemas/orders/orders.module';
 import { ReviewsModule } from './schemas/reviews/review.module';
 import constants from 'src/utils/constants/auth.constants';
 import { BackendGuard } from './guards/backend.guard';
-import { AssetsModule } from './schemas/assets/assets.module';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -57,6 +57,7 @@ import { AssetsModule } from './schemas/assets/assets.module';
       useClass: UserAuthGuard,
     },
   ],
+  exports: [AppService],
 })
 export class AppModule {
   // Apply the guard middleware to all routes in this app to prevent unauthorized requests

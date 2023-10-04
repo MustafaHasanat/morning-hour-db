@@ -1,22 +1,47 @@
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
+import { CategoryFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
+import { CustomResponseType } from 'src/types/custom-response.type';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    private readonly appService: AppService,
   ) {}
 
-  async getCategories(conditions: Record<string, any>) {
+  async getCategories({
+    sortBy = CategoryFields.TITLE,
+    reverse = false,
+    page = 1,
+    conditions,
+  }: GetAllProps<CategoryFields>): Promise<CustomResponseType<Category[]>> {
     try {
-      const response = await this.categoryRepository.findBy(conditions);
+      const findQuery = this.appService.filteredGetQuery({
+        conditions,
+        sortBy,
+        page,
+        reverse,
+      });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.categoryRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -30,7 +55,7 @@ export class CategoriesService {
     }
   }
 
-  async getCategoryById(id: string) {
+  async getCategoryById(id: string): Promise<CustomResponseType<Category>> {
     try {
       const response = await this.categoryRepository.findOneBy({ id });
       return {
@@ -45,7 +70,9 @@ export class CategoriesService {
     }
   }
 
-  async createCategory(createCategoryDto: CreateCategoryDto) {
+  async createCategory(
+    createCategoryDto: CreateCategoryDto,
+  ): Promise<CustomResponseType<Category>> {
     try {
       const newCategory = this.categoryRepository.create({
         ...createCategoryDto,
@@ -56,7 +83,7 @@ export class CategoriesService {
       return {
         message: 'Category has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {
@@ -67,13 +94,16 @@ export class CategoriesService {
     }
   }
 
-  async updateCategory(id: string, updateCategoryDto: UpdateCategoryDto) {
+  async updateCategory(
+    id: string,
+    updateCategoryDto: UpdateCategoryDto,
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       const category = await this.getCategoryById(id);
       if (!category) {
         return {
-          message: 'Invalid data',
-          data: `Category '${id}' doesn't exist`,
+          message: `Category '${id}' doesn't exist`,
+          data: null,
           status: 404,
         };
       }
@@ -104,7 +134,7 @@ export class CategoriesService {
     }
   }
 
-  async deleteAllCategories() {
+  async deleteAllCategories(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.categoryRepository.query(
         'TRUNCATE TABLE category CASCADE;',
@@ -123,13 +153,13 @@ export class CategoriesService {
     }
   }
 
-  async deleteCategory(id: string) {
+  async deleteCategory(id: string): Promise<CustomResponseType<DeleteResult>> {
     try {
       const category = await this.getCategoryById(id);
       if (category.status === 404) {
         return {
-          message: "Category doesn't exist",
-          data: category,
+          message: `Category ${id} doesn't exist`,
+          data: null,
           status: 404,
         };
       }

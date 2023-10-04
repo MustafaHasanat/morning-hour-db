@@ -4,5 +4,6 @@ import { createAuthorBody } from './create-author.body';
 const { required, ...schema } = createAuthorBody.schema;
 
 export const updateAuthorBody = {
+  ...createAuthorBody,
   schema,
 };
