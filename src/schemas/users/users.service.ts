@@ -12,6 +12,9 @@ import { FullTokenPayload, TokenPayload } from 'src/types/token-payload.type';
 import { Request } from 'express';
 import { UserRole } from 'src/enums/user-role.enum';
 import { CustomResponseType } from 'src/types/custom-response.type';
+import { GetAllProps } from 'src/types/get-operators.type';
+import { FilterOperator, UserFields } from 'src/enums/sorting-fields.enum';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class UsersService {
@@ -19,6 +22,7 @@ export class UsersService {
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private jwtService: JwtService,
+    private readonly appService: AppService,
   ) {}
 
   private passwordRemover(user: User): User {
@@ -39,12 +43,32 @@ export class UsersService {
     return userTokenData;
   }
 
-  async getUsers(
-    conditions: Record<string, any>,
-    withPass: boolean = false,
-  ): Promise<CustomResponseType<User[]>> {
+  async getUsers({
+    sortBy = UserFields.USERNAME,
+    reverse = false,
+    page = 1,
+    withPass = false,
+    conditions = [],
+  }: GetAllProps<UserFields> & { withPass?: boolean }): Promise<
+    CustomResponseType<User[]>
+  > {
     try {
-      const response = await this.userRepository.findBy(conditions);
+      const findQuery = this.appService.filteredGetQuery({
+        conditions,
+        sortBy,
+        page,
+        reverse,
+      });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.userRepository.find(findQuery.data);
 
       // remove the password from all the users before sending response
       const updatedUsers = response.map((user) => {
@@ -55,7 +79,7 @@ export class UsersService {
         message: response.length
           ? 'Users have been found'
           : 'Users list is empty',
-        data: updatedUsers as User[],
+        data: updatedUsers,
         status: 200,
       };
     } catch (error) {
@@ -114,7 +138,7 @@ export class UsersService {
       return {
         message: 'User has been created successfully',
         data: this.passwordRemover(response),
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {
@@ -131,6 +155,14 @@ export class UsersService {
     userTokenData: FullTokenPayload,
   ): Promise<CustomResponseType<UpdateResult>> {
     try {
+      if (updateUserDto.password) {
+        return {
+          message: `You're not allowed to change your password from this endpoint`,
+          data: null,
+          status: 403,
+        };
+      }
+
       const user = await this.getUserById(id);
       if (!user) {
         return {
@@ -244,8 +276,21 @@ export class UsersService {
     password: string,
   ): Promise<CustomResponseType<string>> {
     try {
-      const response = await this.getUsers({ email }, true);
-      if (response?.data?.length === 0) {
+      const response = await this.getUsers({
+        withPass: true,
+        conditions: [
+          {
+            filteredTerm: {
+              dataType: 'string',
+              value: email,
+            },
+            filterOperator: FilterOperator.CONTAINS,
+            field: UserFields.EMAIL,
+          },
+        ],
+      });
+
+      if (!response?.data?.length) {
         return {
           message: 'Invalid email',
           data: email,
@@ -282,4 +327,32 @@ export class UsersService {
       };
     }
   }
+
+  // async resetPassword(): Promise<CustomResponseType<any>> {
+  //   try {
+  //     const text = 'this is a test';
+
+  //     const data = {
+  //       to: 'mustfaaayyed@gmail.com',
+  //       from: 'mustafa.hasanat99@gmail.com',
+  //       subject: 'hello',
+  //       text,
+  //       html: `<strong>${text}</strong>`,
+  //     };
+
+  //     const response = await sendEmail(data);
+
+  //     return {
+  //       message: 'Password has been resat successfully',
+  //       data: response,
+  //       status: 200,
+  //     };
+  //   } catch (error) {
+  //     return {
+  //       message: 'Error occurred',
+  //       data: error,
+  //       status: 500,
+  //     };
+  //   }
+  // }
 }

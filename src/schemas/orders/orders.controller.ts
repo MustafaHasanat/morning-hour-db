@@ -10,7 +10,6 @@ import {
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
-import { ApiQuery } from '@nestjs/swagger';
 import { Response } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
@@ -20,21 +19,40 @@ import { createOrderBody } from './dto/create-order.body';
 import { updateOrderBody } from './dto/update-order.body';
 import { MembersOnly } from 'src/decorators/members.decorator';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { OrderFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @MembersOnly()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: OrderFields,
+  })
   async getOrders(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<OrderFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.ordersService.getOrders(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<OrderFields>[] =
+      this.appService.validateGetConditions<OrderFields>(conditions);
 
+    const response: CustomResponseDto = await this.ordersService.getOrders({
+      sortBy: sortBy || OrderFields.CREATED_AT,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 

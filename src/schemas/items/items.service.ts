@@ -30,27 +30,28 @@ export class ItemsService {
   ) {}
 
   async getItems({
-    sortBy,
-    reverse,
+    sortBy = ItemFields.TITLE,
+    reverse = false,
+    page = 1,
     conditions,
   }: GetAllProps<ItemFields>): Promise<CustomResponseType<Item[]>> {
     try {
-      const findQuery = this.appService.getFilteredQuery({
+      const findQuery = this.appService.filteredGetQuery({
         conditions,
         sortBy,
+        page,
         reverse,
       });
 
-      if (!findQuery) {
+      if (findQuery.status !== 200) {
         return {
-          message:
-            'The inputs (field, filterOperator, filteredTerm) must be consistent',
+          message: findQuery.message,
           data: null,
-          status: 400,
+          status: findQuery.status,
         };
       }
 
-      const response = await this.itemRepository.find(findQuery);
+      const response = await this.itemRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -135,7 +136,7 @@ export class ItemsService {
       return {
         message: 'Item has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {

@@ -11,6 +11,8 @@ import { User } from '../users/entities/user.entity';
 import { ItemsService } from '../items/items.service';
 import { CustomResponseType } from 'src/types/custom-response.type';
 import { OrderFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class OrdersService {
@@ -19,13 +21,32 @@ export class OrdersService {
     private readonly orderRepository: Repository<Order>,
     private readonly usersService: UsersService,
     private readonly itemsService: ItemsService,
+    private readonly appService: AppService,
   ) {}
 
-  async getOrders(
-    conditions: Record<string, any>,
-  ): Promise<CustomResponseType<Order[]>> {
+  async getOrders({
+    sortBy = OrderFields.CREATED_AT,
+    reverse = false,
+    page = 1,
+    conditions,
+  }: GetAllProps<OrderFields>): Promise<CustomResponseType<Order[]>> {
     try {
-      const response = await this.orderRepository.findBy(conditions);
+      const findQuery = this.appService.filteredGetQuery({
+        sortBy,
+        reverse,
+        page,
+        conditions,
+      });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.orderRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -80,7 +101,7 @@ export class OrdersService {
       return {
         message: 'Order has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {

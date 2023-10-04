@@ -24,48 +24,38 @@ import { updateItemBody } from './dto/update-item.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
 import { ItemFields } from 'src/enums/sorting-fields.enum';
-import { GetConditionsProps } from 'src/types/get-operators.type';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('items')
 export class ItemsController {
-  constructor(private readonly itemsService: ItemsService) {}
+  constructor(
+    private readonly itemsService: ItemsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
   @GetAllWrapper({
-    fieldsEnum: [
-      ItemFields.CURRENT_PRICE,
-      ItemFields.DESCRIPTION,
-      ItemFields.OLD_PRICE,
-      ItemFields.PRIMARY_COLOR,
-      ItemFields.TITLE,
-    ],
+    fieldsEnum: ItemFields,
   })
   async getItems(
     @Query()
-    query: {
-      sortBy: ItemFields;
-      reverse: boolean;
-      conditions: string[];
-    },
+    query: GetQueryProps<ItemFields>,
     @Res() res: Response,
   ) {
-    const { sortBy, reverse, conditions } = query;
-    let parsed: GetConditionsProps<ItemFields>[] = [];
-
-    if (conditions) {
-      try {
-        parsed = conditions.map((condition) => JSON.parse(condition));
-      } catch (error) {
-        parsed = [JSON.parse(`${conditions}`)];
-      }
-    }
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<ItemFields>[] =
+      this.appService.validateGetConditions<ItemFields>(conditions);
 
     const response: CustomResponseDto = await this.itemsService.getItems({
-      conditions: parsed,
-      sortBy,
-      reverse,
+      sortBy: sortBy || ItemFields.TITLE,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
     });
-
     return res.status(response.status).json(response);
   }
 

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import {
   AuthorFields,
@@ -10,7 +9,7 @@ import {
   SortDirection,
   UserFields,
 } from './enums/sorting-fields.enum';
-import { GetAllProps } from './types/get-operators.type';
+import { GetAllProps, GetConditionsProps } from './types/get-operators.type';
 import {
   Like,
   MoreThan,
@@ -20,6 +19,7 @@ import {
   Equal,
   FindManyOptions,
 } from 'typeorm';
+import requestConstants from './utils/constants/request.constants';
 
 @Injectable()
 export class AppService {
@@ -33,9 +33,22 @@ export class AppService {
     };
   }
 
-  getFilteredQuery({
+  validateGetConditions<FieldType>(
+    conditions: any,
+  ): GetConditionsProps<FieldType>[] {
+    if (conditions) {
+      try {
+        return conditions.map((condition: string) => JSON.parse(condition));
+      } catch (error) {
+        return [JSON.parse(`${conditions}`)];
+      }
+    }
+  }
+
+  filteredGetQuery({
     sortBy,
     reverse,
+    page,
     conditions,
   }: GetAllProps<
     | AuthorFields
@@ -44,9 +57,17 @@ export class AppService {
     | OrderFields
     | ReviewFields
     | UserFields
-  >): FindManyOptions {
+  >): { message: string; data: FindManyOptions; status: number } {
     try {
       const whereQuery = {};
+
+      if (page < 0) {
+        return {
+          message: 'Page number must be a positive integer or a zero',
+          data: null,
+          status: 400,
+        };
+      }
 
       conditions.forEach((condition) => {
         const {
@@ -58,7 +79,12 @@ export class AppService {
         const isNumber = ![FilterOperator.CONTAINS].includes(filterOperator);
 
         if (isNumber && dataType === 'string') {
-          return null;
+          return {
+            message:
+              'The inputs (field, filterOperator, filteredTerm.dataType, filteredTerm.value) must be consistent',
+            data: null,
+            status: 400,
+          };
         }
 
         const where = isNumber
@@ -68,13 +94,30 @@ export class AppService {
         whereQuery[field] = where[field];
       });
 
+      const pageOptions =
+        page === 0
+          ? {}
+          : {
+              take: requestConstants.ITEMS_IN_PAGE,
+              skip: requestConstants.ITEMS_IN_PAGE * (page - 1),
+            };
+
       return {
-        where: { ...whereQuery },
-        order: { [sortBy]: reverse ? SortDirection.DESC : SortDirection.ASC },
+        message: 'Data retrieved successfully',
+        data: {
+          where: { ...whereQuery },
+          order: { [sortBy]: reverse ? SortDirection.DESC : SortDirection.ASC },
+          ...pageOptions,
+        },
+        status: 200,
       };
     } catch (error) {
       console.log(error);
-      return {};
+      return {
+        message: 'Error occurred',
+        data: error,
+        status: 500,
+      };
     }
   }
 }

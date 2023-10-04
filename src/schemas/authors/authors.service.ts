@@ -1,10 +1,9 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Author } from './entities/author.entity';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
-import { ItemsService } from '../items/items.service';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { AuthorFields } from 'src/enums/sorting-fields.enum';
@@ -18,41 +17,33 @@ export class AuthorsService {
     @InjectRepository(Author)
     private readonly authorRepository: Repository<Author>,
     private readonly appService: AppService,
-
-    @Inject(forwardRef(() => ItemsService))
-    private readonly itemsService: ItemsService,
   ) {}
-
-  // {
-  //   field = AuthorFields.NAME,
-  //   filteredTerm = '',
-  //   filterOperator = FilterOperator.CONTAINS,
-  //   sortDirection = SortDirection.ASC,
-  //   conditions = null,
-  // }
+  // @Inject(forwardRef(() => ItemsService))
+  // private readonly itemsService: ItemsService,
 
   async getAuthors({
-    sortBy,
-    reverse,
+    sortBy = AuthorFields.NAME,
+    reverse = false,
+    page = 1,
     conditions,
   }: GetAllProps<AuthorFields>): Promise<CustomResponseType<Author[]>> {
     try {
-      const findQuery = this.appService.getFilteredQuery({
+      const findQuery = this.appService.filteredGetQuery({
         conditions,
         sortBy,
+        page,
         reverse,
       });
 
-      if (!findQuery) {
+      if (findQuery.status !== 200) {
         return {
-          message:
-            'The inputs (field, filterOperator, filteredTerm.dataType, filteredTerm.value) must be consistent',
+          message: findQuery.message,
           data: null,
-          status: 400,
+          status: findQuery.status,
         };
       }
 
-      const response = await this.authorRepository.find(findQuery);
+      const response = await this.authorRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -92,7 +83,7 @@ export class AuthorsService {
       return {
         message: 'Author has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {

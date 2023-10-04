@@ -1,22 +1,24 @@
 import { FilterOperator } from 'src/enums/sorting-fields.enum';
 
-export type GetConditionsProps<fieldType> = {
+export type GetConditionsProps<FieldType> = {
   filteredTerm: {
     dataType: 'string' | 'number';
     value: string | number;
   };
   filterOperator: FilterOperator;
-  field: fieldType;
+  field: FieldType;
 };
 
-export type GetAllProps<fieldType> = {
-  conditions: GetConditionsProps<fieldType>[];
-  sortBy: fieldType;
-  reverse: boolean;
+export type GetAllProps<FieldType> = {
+  conditions: GetConditionsProps<FieldType>[];
+  sortBy?: FieldType;
+  reverse?: boolean;
+  page?: number;
 };
 
-export type GetQueryProps<fieldType> = {
-  sortBy: fieldType;
+export type GetQueryProps<FieldType> = {
+  sortBy: FieldType;
   reverse: string;
+  page: number;
   conditions: string[];
 };

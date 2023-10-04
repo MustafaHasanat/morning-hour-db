@@ -9,6 +9,9 @@ import { ItemsService } from '../items/items.service';
 import { UpdateReviewDto } from './dto/update-review.dto';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { CustomResponseType } from 'src/types/custom-response.type';
+import { AppService } from 'src/app.service';
+import { ReviewFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
 
 @Injectable()
 export class ReviewsService {
@@ -17,13 +20,32 @@ export class ReviewsService {
     private readonly reviewRepository: Repository<Review>,
     private readonly usersService: UsersService,
     private readonly itemsService: ItemsService,
+    private readonly appService: AppService,
   ) {}
 
-  async getReviews(
-    conditions: Record<string, any>,
-  ): Promise<CustomResponseType<Review[]>> {
+  async getReviews({
+    sortBy = ReviewFields.RATING,
+    reverse = false,
+    page = 1,
+    conditions,
+  }: GetAllProps<ReviewFields>): Promise<CustomResponseType<Review[]>> {
     try {
-      const response = await this.reviewRepository.findBy(conditions);
+      const findQuery = this.appService.filteredGetQuery({
+        conditions,
+        sortBy,
+        page,
+        reverse,
+      });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.reviewRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -72,7 +94,7 @@ export class ReviewsService {
       return {
         message: 'Review has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {

@@ -25,10 +25,14 @@ import {
   GetConditionsProps,
   GetQueryProps,
 } from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('authors')
 export class AuthorsController {
-  constructor(private readonly authorsService: AuthorsService) {}
+  constructor(
+    private readonly authorsService: AuthorsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
   @GetAllWrapper({
@@ -39,21 +43,15 @@ export class AuthorsController {
     query: GetQueryProps<AuthorFields>,
     @Res() res: Response,
   ) {
-    const { sortBy, reverse, conditions } = query;
-    let parsed: GetConditionsProps<AuthorFields>[] = [];
-
-    if (conditions) {
-      try {
-        parsed = conditions.map((condition) => JSON.parse(condition));
-      } catch (error) {
-        parsed = [JSON.parse(`${conditions}`)];
-      }
-    }
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<AuthorFields>[] =
+      this.appService.validateGetConditions<AuthorFields>(conditions);
 
     const response: CustomResponseDto = await this.authorsService.getAuthors({
-      conditions: parsed,
-      sortBy,
+      sortBy: sortBy || AuthorFields.NAME,
       reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
     });
     return res.status(response.status).json(response);
   }

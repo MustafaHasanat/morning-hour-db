@@ -39,11 +39,22 @@ export function GetAllWrapper({ fieldsEnum }: { fieldsEnum: SwaggerEnumType }) {
       type: 'enum',
       required: false,
       enum: fieldsEnum,
+      example: Object.values(fieldsEnum)[0],
+      description: 'select the field of which the results should ',
     }),
     ApiQuery({
       name: 'reverse',
       type: 'boolean',
       required: false,
+      example: false,
+      description: 'reverse the order of the rows',
+    }),
+    ApiQuery({
+      name: 'page',
+      type: 'number',
+      required: false,
+      example: 1,
+      description: 'specify the number of the page (enter 0 to get all pages)',
     }),
   );
 }

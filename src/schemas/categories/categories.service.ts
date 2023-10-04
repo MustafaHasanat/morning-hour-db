@@ -1,36 +1,47 @@
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Like, Repository, UpdateResult } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
-import {
-  CategoryFields,
-  FilterOperator,
-  SortDirection,
-} from 'src/enums/sorting-fields.enum';
+import { CategoryFields } from 'src/enums/sorting-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { CustomResponseType } from 'src/types/custom-response.type';
+import { AppService } from 'src/app.service';
 
 @Injectable()
 export class CategoriesService {
   constructor(
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
+    private readonly appService: AppService,
   ) {}
 
-  async getCategories(
-    conditions: GetAllProps<CategoryFields>,
-  ): Promise<CustomResponseType<Category[]>> {
+  async getCategories({
+    sortBy = CategoryFields.TITLE,
+    reverse = false,
+    page = 1,
+    conditions,
+  }: GetAllProps<CategoryFields>): Promise<CustomResponseType<Category[]>> {
     try {
-      const response = await this.categoryRepository.find({
-        // where: !!!Object.keys(conditions).length
-        //   ? { [field]: Like(`%${filteredTerm}%`) }
-        //   : conditions,
-        // order: { [field]: sortDirection },
+      const findQuery = this.appService.filteredGetQuery({
+        conditions,
+        sortBy,
+        page,
+        reverse,
       });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.categoryRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -72,7 +83,7 @@ export class CategoriesService {
       return {
         message: 'Category has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {

@@ -24,26 +24,39 @@ import { updateCategoryBody } from './dto/update-category.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
 import { CategoryFields } from 'src/enums/sorting-fields.enum';
-import { GetAllProps } from 'src/types/get-operators.type';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
 @ControllerWrapper('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
   @GetAllWrapper({
-    fieldsEnum: [CategoryFields.TITLE],
+    fieldsEnum: CategoryFields,
   })
   async getCategories(
     @Query()
-    query: {
-      conditions: GetAllProps<CategoryFields>;
-    },
+    query: GetQueryProps<CategoryFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.categoriesService.getCategories(query.conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<CategoryFields>[] =
+      this.appService.validateGetConditions<CategoryFields>(conditions);
 
+    const response: CustomResponseDto =
+      await this.categoriesService.getCategories({
+        sortBy: sortBy || CategoryFields.TITLE,
+        reverse: reverse === 'true',
+        page: Number(page),
+        conditions: parsed || [],
+      });
     return res.status(response.status).json(response);
   }
 
