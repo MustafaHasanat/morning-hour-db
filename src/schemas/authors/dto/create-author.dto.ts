@@ -1,20 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, MinLength } from 'class-validator';
+import { MinLength } from 'class-validator';
 
 export class CreateAuthorDto {
-  @IsNotEmpty()
   @MinLength(5)
-  @ApiProperty({ example: 'username' })
+  @ApiProperty({ example: 'username', required: true })
   name: string;
 
-  @IsNotEmpty()
-  @ApiProperty({ example: 'brief about him/her' })
+  @MinLength(50)
+  @ApiProperty({ example: 'brief about him/her', required: true })
   brief: string;
 
   @ApiProperty({
     type: 'string',
     format: 'binary',
     example: 'url',
+    required: true,
   })
   image: Express.Multer.File;
 }

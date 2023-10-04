@@ -21,15 +21,8 @@ export class Order {
 
   //relations
   @ManyToOne(() => User, (user) => user.orders)
-  @Column({
-    nullable: false,
-  })
-  userId: string;
+  user: User;
 
   @ManyToMany(() => Item, (item) => item.orders)
-  @Column({
-    type: 'simple-array',
-    nullable: false,
-  })
-  items: string[];
+  items: Item[];
 }

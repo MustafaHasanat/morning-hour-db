@@ -1,68 +1,62 @@
 import {
   Body,
-  Controller,
   Get,
   Param,
   Post,
-  UsePipes,
-  ValidationPipe,
   Delete,
   Patch,
-  UseInterceptors,
   UploadedFile,
   Res,
   Query,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-  ApiHeader,
-} from '@nestjs/swagger';
-import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { AuthorsService } from './authors.service';
 import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
-import { authorBody } from './dto/author-body';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
-import { Public } from 'src/decorators/public.decorator';
+import { createAuthorBody } from './dto/create-author.body';
+import { updateAuthorBody } from './dto/update-author.body';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { AuthorFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
-@ApiTags('Authors')
-@Controller('authors')
-@ApiBearerAuth()
-@ApiHeader({
-  name: 'Custom-Header',
-  description: 'A custom header added to all requests',
-  required: true,
-})
+@ControllerWrapper('authors')
 export class AuthorsController {
-  constructor(private readonly authorsService: AuthorsService) {}
+  constructor(
+    private readonly authorsService: AuthorsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @Public()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
-  @ApiHeader({
-    name: 'Authorization',
-    description: 'Bearer token for authentication',
-    required: true, // Set to true if the header is required
+  @GetAllWrapper({
+    fieldsEnum: AuthorFields,
   })
   async getAuthors(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<AuthorFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.authorsService.getAuthors(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<AuthorFields>[] =
+      this.appService.validateGetConditions<AuthorFields>(conditions);
 
+    const response: CustomResponseDto = await this.authorsService.getAuthors({
+      sortBy: sortBy || AuthorFields.NAME,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 
   @Get(':id')
-  @Public()
   async getAuthorById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.authorsService.getAuthorById(id);
@@ -70,30 +64,16 @@ export class AuthorsController {
     return res.status(response.status).json(response);
   }
 
-  @Get('assets/:imageName')
-  @Public()
-  async downloadImage(
-    @Param('imageName') imageName: string,
-    @Res() res: Response,
-  ) {
-    return res.sendFile(this.authorsService.downloadImage(imageName).data);
-  }
-
   @Post()
-  @ApiOkResponse({ type: CreateAuthorDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', storeLocalFile('authors')))
-  @ApiBody(authorBody)
+  @AdminsOnly()
+  @CreateUpdateWrapper(CreateAuthorDto, createAuthorBody)
   async createAuthor(
     @UploadedFile() image: Express.Multer.File,
     @Body() createAuthorDto: CreateAuthorDto,
     @Res() res: Response,
   ) {
-    const { name, brief } = createAuthorDto;
     const response: CustomResponseDto = await this.authorsService.createAuthor({
-      name,
-      brief,
+      ...createAuthorDto,
       image,
     });
 
@@ -101,23 +81,18 @@ export class AuthorsController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateAuthorDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
-  @UseInterceptors(FileInterceptor('image', storeLocalFile('authors')))
-  @ApiBody(authorBody)
+  @AdminsOnly()
+  @CreateUpdateWrapper(UpdateAuthorDto, updateAuthorBody)
   async updateAuthor(
     @Param('id') id: string,
     @Body() updateAuthorDto: UpdateAuthorDto,
     @UploadedFile() image: Express.Multer.File,
     @Res() res: Response,
   ) {
-    const { name, brief } = updateAuthorDto;
     const response: CustomResponseDto = await this.authorsService.updateAuthor(
       id,
       {
-        name,
-        brief,
+        ...updateAuthorDto,
         image,
       },
     );
@@ -126,6 +101,7 @@ export class AuthorsController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllAuthors(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.authorsService.deleteAllAuthors();
@@ -134,6 +110,7 @@ export class AuthorsController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteAuthor(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.authorsService.deleteAuthor(id);

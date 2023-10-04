@@ -1,11 +1,8 @@
 import {
   Body,
-  Controller,
   Get,
   Param,
   Post,
-  UsePipes,
-  ValidationPipe,
   Delete,
   Patch,
   UseInterceptors,
@@ -14,63 +11,64 @@ import {
   Query,
 } from '@nestjs/common';
 import { ItemsService } from './items.service';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { Response } from 'express';
-import { itemBody } from './dto/item-body';
+import { createItemBody } from './dto/create-item.body';
 import { CreateItemDto } from './dto/create-item.dto';
-import { Public } from 'src/decorators/public.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { UpdateItemDto } from './dto/update-item.dto';
+import { updateItemBody } from './dto/update-item.body';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { ItemFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
-@ApiTags('Items')
-@Controller('items')
-@ApiBearerAuth()
+@ControllerWrapper('items')
 export class ItemsController {
-  constructor(private readonly itemsService: ItemsService) {}
+  constructor(
+    private readonly itemsService: ItemsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @Public()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: ItemFields,
+  })
   async getItems(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<ItemFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.itemsService.getItems(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<ItemFields>[] =
+      this.appService.validateGetConditions<ItemFields>(conditions);
 
+    const response: CustomResponseDto = await this.itemsService.getItems({
+      sortBy: sortBy || ItemFields.TITLE,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 
   @Get(':id')
-  @Public()
   async getItemById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto = await this.itemsService.getItemById(id);
 
     return res.status(response.status).json(response);
   }
 
-  @Get('assets/:imageName')
-  @Public()
-  async downloadImage(
-    @Param('imageName') imageName: string,
-    @Res() res: Response,
-  ) {
-    return res.sendFile(this.itemsService.downloadImage(imageName).data);
-  }
-
   @Post()
-  @ApiOkResponse({ type: CreateItemDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
-  @ApiBody(itemBody)
+  @AdminsOnly()
+  @CreateUpdateWrapper(CreateItemDto, createItemBody)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -91,26 +89,8 @@ export class ItemsController {
   ) {
     const { image, screenshots } = files;
 
-    const {
-      title,
-      description,
-      currentPrice,
-      oldPrice,
-      isBestSelling,
-      primaryColor,
-      authorId,
-      categoryId,
-    } = createItemDto;
-
     const response: CustomResponseDto = await this.itemsService.createItem({
-      title,
-      description,
-      currentPrice,
-      oldPrice,
-      isBestSelling,
-      primaryColor,
-      authorId,
-      categoryId,
+      ...createItemDto,
       image: image[0],
       screenshots,
     });
@@ -119,10 +99,8 @@ export class ItemsController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: CreateItemDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
-  @ApiBody(itemBody)
+  @AdminsOnly()
+  @CreateUpdateWrapper(UpdateItemDto, updateItemBody)
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -139,31 +117,13 @@ export class ItemsController {
       image: Express.Multer.File[];
       screenshots: Express.Multer.File[];
     },
-    @Body() updateItemDto: CreateItemDto,
+    @Body() updateItemDto: UpdateItemDto,
     @Res() res: Response,
   ) {
     const { image, screenshots } = files;
 
-    const {
-      title,
-      description,
-      currentPrice,
-      oldPrice,
-      isBestSelling,
-      primaryColor,
-      authorId,
-      categoryId,
-    } = updateItemDto;
-
     const response: CustomResponseDto = await this.itemsService.updateItem(id, {
-      title,
-      description,
-      currentPrice,
-      oldPrice,
-      isBestSelling,
-      primaryColor,
-      authorId,
-      categoryId,
+      ...updateItemDto,
       image: image[0],
       screenshots,
     });
@@ -172,6 +132,7 @@ export class ItemsController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllItems(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.itemsService.deleteAllItems();
@@ -180,6 +141,7 @@ export class ItemsController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteItem(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto = await this.itemsService.deleteItem(id);
 

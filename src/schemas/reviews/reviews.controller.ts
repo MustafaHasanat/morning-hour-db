@@ -1,6 +1,5 @@
 import {
   Body,
-  Controller,
   Delete,
   Get,
   Param,
@@ -8,46 +7,56 @@ import {
   Post,
   Query,
   Res,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
 import { Response } from 'express';
 import { ReviewsService } from './reviews.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { CreateReviewDto } from './dto/create-review.dto';
-import { reviewBody } from './dto/review-body';
+import { createReviewBody } from './dto/create-review.body';
 import { UpdateReviewDto } from './dto/update-review.dto';
-import { Public } from 'src/decorators/public.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { updateReviewBody } from './dto/update-review.body';
+import { MembersOnly } from 'src/decorators/members.decorator';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { ReviewFields } from 'src/enums/sorting-fields.enum';
+import { AppService } from 'src/app.service';
 
-@ApiTags('Reviews')
-@Controller('reviews')
-@ApiBearerAuth()
+@ControllerWrapper('reviews')
 export class ReviewsController {
-  constructor(private readonly reviewsService: ReviewsService) {}
+  constructor(
+    private readonly reviewsService: ReviewsService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @Public()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: ReviewFields,
+  })
   async getReviews(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<ReviewFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.reviewsService.getReviews(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<ReviewFields>[] =
+      this.appService.validateGetConditions<ReviewFields>(conditions);
 
+    const response: CustomResponseDto = await this.reviewsService.getReviews({
+      sortBy: sortBy || ReviewFields.TEXT,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 
   @Get(':id')
-  @Public()
   async getReviewById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.reviewsService.getReviewById(id);
@@ -56,45 +65,36 @@ export class ReviewsController {
   }
 
   @Post()
-  @ApiOkResponse({ type: CreateReviewDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(reviewBody)
+  @MembersOnly()
+  @CreateUpdateWrapper(CreateReviewDto, createReviewBody)
   async createReview(
     @Body() createReviewDto: CreateReviewDto,
     @Res() res: Response,
   ) {
-    const { text, rating, userId, itemId } = createReviewDto;
-    const response: CustomResponseDto = await this.reviewsService.createReview({
-      text,
-      rating,
-      userId,
-      itemId,
-    });
+    const response: CustomResponseDto =
+      await this.reviewsService.createReview(createReviewDto);
 
     return res.status(response.status).json(response);
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateReviewDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(reviewBody)
+  @AdminsOnly()
+  @CreateUpdateWrapper(UpdateReviewDto, updateReviewBody)
   async updateReview(
     @Param('id') id: string,
     @Body() updateReviewDto: UpdateReviewDto,
     @Res() res: Response,
   ) {
-    const { text, rating, userId, itemId } = updateReviewDto;
     const response: CustomResponseDto = await this.reviewsService.updateReview(
       id,
-      { text, rating, userId, itemId },
+      updateReviewDto,
     );
 
     return res.status(response.status).json(response);
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllReviews(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.reviewsService.deleteAllReviews();
@@ -103,6 +103,7 @@ export class ReviewsController {
   }
 
   @Delete(':id')
+  @MembersOnly()
   async deleteReview(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.reviewsService.deleteReview(id);

@@ -1,12 +1,17 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UsersService } from '../users/users.service';
 import { ItemsService } from '../items/items.service';
 import { UpdateReviewDto } from './dto/update-review.dto';
+import { filterNullsObject } from 'src/utils/helpers/filterNulls';
+import { CustomResponseType } from 'src/types/custom-response.type';
+import { AppService } from 'src/app.service';
+import { ReviewFields } from 'src/enums/sorting-fields.enum';
+import { GetAllProps } from 'src/types/get-operators.type';
 
 @Injectable()
 export class ReviewsService {
@@ -15,11 +20,32 @@ export class ReviewsService {
     private readonly reviewRepository: Repository<Review>,
     private readonly usersService: UsersService,
     private readonly itemsService: ItemsService,
+    private readonly appService: AppService,
   ) {}
 
-  async getReviews(conditions: Record<string, any>) {
+  async getReviews({
+    sortBy = ReviewFields.RATING,
+    reverse = false,
+    page = 1,
+    conditions,
+  }: GetAllProps<ReviewFields>): Promise<CustomResponseType<Review[]>> {
     try {
-      const response = await this.reviewRepository.findBy(conditions);
+      const findQuery = this.appService.filteredGetQuery({
+        conditions,
+        sortBy,
+        page,
+        reverse,
+      });
+
+      if (findQuery.status !== 200) {
+        return {
+          message: findQuery.message,
+          data: null,
+          status: findQuery.status,
+        };
+      }
+
+      const response = await this.reviewRepository.find(findQuery.data);
 
       return {
         message: response.length
@@ -33,7 +59,7 @@ export class ReviewsService {
     }
   }
 
-  async getReviewById(id: string) {
+  async getReviewById(id: string): Promise<CustomResponseType<Review>> {
     try {
       const response = await this.reviewRepository.findOneBy({ id });
       return {
@@ -46,15 +72,17 @@ export class ReviewsService {
     }
   }
 
-  async createReview(createReviewDto: CreateReviewDto) {
+  async createReview(
+    createReviewDto: CreateReviewDto,
+  ): Promise<CustomResponseType<Review>> {
     try {
       // check the user and the item
       const user = await this.usersService.getUserById(createReviewDto.userId);
       const item = await this.itemsService.getItemById(createReviewDto.itemId);
       if (!user || !item) {
         return {
-          message: 'Invalid data',
-          data: `Provided ${!user ? 'user' : 'item'} does not exist`,
+          message: `Provided ${!user ? 'user' : 'item'} does not exist`,
+          data: null,
           status: 400,
         };
       }
@@ -66,7 +94,7 @@ export class ReviewsService {
       return {
         message: 'Review has been created successfully',
         data: response,
-        status: 200,
+        status: 201,
       };
     } catch (error) {
       return {
@@ -77,18 +105,21 @@ export class ReviewsService {
     }
   }
 
-  async updateReview(id: string, updateReviewDto: UpdateReviewDto) {
+  async updateReview(
+    id: string,
+    updateReviewDto: UpdateReviewDto,
+  ): Promise<CustomResponseType<UpdateResult>> {
     try {
       // check the user, item, and review
       const user = await this.usersService.getUserById(updateReviewDto.userId);
       const item = await this.itemsService.getItemById(updateReviewDto.itemId);
-      const review = await this.getReviewById(updateReviewDto.userId);
+      const review = await this.getReviewById(id);
       if (!user || !item || !review) {
         return {
-          message: 'Invalid data',
-          data: !review
+          message: !review
             ? "Review doesn't exist"
             : `Provided ${!user ? 'user' : 'item'} does not exist`,
+          data: null,
           status: 400,
         };
       }
@@ -98,7 +129,7 @@ export class ReviewsService {
         {
           id,
         },
-        updateReviewDto,
+        filterNullsObject(updateReviewDto),
       );
 
       return {
@@ -115,7 +146,7 @@ export class ReviewsService {
     }
   }
 
-  async deleteAllReviews() {
+  async deleteAllReviews(): Promise<CustomResponseType<DeleteResult>> {
     try {
       const response = await this.reviewRepository.query(
         'TRUNCATE TABLE review CASCADE;',
@@ -130,15 +161,22 @@ export class ReviewsService {
     }
   }
 
-  async deleteReview(id: string) {
+  async deleteReview(id: string): Promise<CustomResponseType<DeleteResult>> {
     try {
+      const review = await this.getReviewById(id);
+      if (!review.data) {
+        return {
+          message: `Review ${id} doesn't exist`,
+          data: null,
+          status: 404,
+        };
+      }
+
       const response = await this.reviewRepository.delete(id);
       return {
-        message: response
-          ? 'Review has been deleted successfully'
-          : "Review doesn't exist",
+        message: 'Review has been deleted successfully',
         data: response,
-        status: response ? 200 : 404,
+        status: 200,
       };
     } catch (error) {
       return { message: 'Error occurred', data: error, status: 500 };

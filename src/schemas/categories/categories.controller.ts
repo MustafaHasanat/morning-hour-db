@@ -1,11 +1,8 @@
 import {
   Body,
-  Controller,
   Get,
   Param,
   Post,
-  UsePipes,
-  ValidationPipe,
   Delete,
   Patch,
   Res,
@@ -14,44 +11,56 @@ import {
   Query,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
 import { storeLocalFile } from 'src/utils/storageProcess/storage';
 import { CategoriesService } from './categories.service';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
-import { categoryBody } from './dto/category-body';
+import { createCategoryBody } from './dto/create-category.body';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
 import { Response } from 'express';
-import { Public } from 'src/decorators/public.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { updateCategoryBody } from './dto/update-category.body';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { CategoryFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
-@ApiTags('Categories')
-@Controller('categories')
-@ApiBearerAuth()
+@ControllerWrapper('categories')
 export class CategoriesController {
-  constructor(private readonly categoriesService: CategoriesService) {}
+  constructor(
+    private readonly categoriesService: CategoriesService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @Public()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: CategoryFields,
+  })
   async getCategories(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<CategoryFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.categoriesService.getCategories(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<CategoryFields>[] =
+      this.appService.validateGetConditions<CategoryFields>(conditions);
 
+    const response: CustomResponseDto =
+      await this.categoriesService.getCategories({
+        sortBy: sortBy || CategoryFields.TITLE,
+        reverse: reverse === 'true',
+        page: Number(page),
+        conditions: parsed || [],
+      });
     return res.status(response.status).json(response);
   }
 
   @Get(':id')
-  @Public()
   async getCategoryById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.categoriesService.getCategoryById(id);
@@ -59,30 +68,18 @@ export class CategoriesController {
     return res.status(response.status).json(response);
   }
 
-  @Get('assets/:imageName')
-  @Public()
-  async downloadImage(
-    @Param('imageName') imageName: string,
-    @Res() res: Response,
-  ) {
-    return res.sendFile(this.categoriesService.downloadImage(imageName).data);
-  }
-
   @Post()
-  @ApiOkResponse({ type: CreateCategoryDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @AdminsOnly()
+  @CreateUpdateWrapper(CreateCategoryDto, createCategoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
-  @ApiBody(categoryBody)
   async createCategory(
     @UploadedFile() image: Express.Multer.File,
     @Body() createCategoryDto: CreateCategoryDto,
     @Res() res: Response,
   ) {
-    const { title } = createCategoryDto;
     const response: CustomResponseDto =
       await this.categoriesService.createCategory({
-        title,
+        ...createCategoryDto,
         image,
       });
 
@@ -90,21 +87,18 @@ export class CategoriesController {
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateCategoryDto })
-  @UsePipes(ValidationPipe)
-  @ApiConsumes('multipart/form-data')
+  @AdminsOnly()
+  @CreateUpdateWrapper(UpdateCategoryDto, updateCategoryBody)
   @UseInterceptors(FileInterceptor('image', storeLocalFile('categories')))
-  @ApiBody(categoryBody)
   async updateCategory(
     @Param('id') id: string,
     @Body() updateCategoryDto: UpdateCategoryDto,
     @UploadedFile() image: Express.Multer.File,
     @Res() res: Response,
   ) {
-    const { title } = updateCategoryDto;
     const response: CustomResponseDto =
       await this.categoriesService.updateCategory(id, {
-        title,
+        ...updateCategoryDto,
         image,
       });
 
@@ -112,6 +106,7 @@ export class CategoriesController {
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllCategories(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.categoriesService.deleteAllCategories();
@@ -120,6 +115,7 @@ export class CategoriesController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteCategory(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.categoriesService.deleteCategory(id);

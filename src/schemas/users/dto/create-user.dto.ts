@@ -1,10 +1,10 @@
 import { ApiProperty, PartialType } from '@nestjs/swagger';
 import { IsNotEmpty } from 'class-validator';
 import { LoginUserDto } from './login-user.dto';
-import { UserGender } from 'src/types/user-gender.type';
 import { UserPricingRange } from 'src/types/user-pricing-range.type';
 import { UserCart } from 'src/types/user-cart';
-import { UserRole } from 'src/types/user-role';
+import { UserGender } from 'src/enums/user-gender.enum';
+import { UserRole } from 'src/enums/user-role.enum';
 
 export class CreateUserDto extends PartialType(LoginUserDto) {
   @IsNotEmpty()

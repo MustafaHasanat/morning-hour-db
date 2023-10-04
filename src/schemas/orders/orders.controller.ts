@@ -1,6 +1,5 @@
 import {
   Body,
-  Controller,
   Delete,
   Get,
   Param,
@@ -8,43 +7,57 @@ import {
   Post,
   Query,
   Res,
-  UsePipes,
-  ValidationPipe,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CustomResponseDto } from 'src/dtos/custom-response.dto';
-import {
-  ApiBody,
-  ApiConsumes,
-  ApiOkResponse,
-  ApiQuery,
-  ApiTags,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
 import { Response } from 'express';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { orderBody } from './dto/order-body';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
+import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
+import { createOrderBody } from './dto/create-order.body';
+import { updateOrderBody } from './dto/update-order.body';
+import { MembersOnly } from 'src/decorators/members.decorator';
+import { AdminsOnly } from 'src/decorators/admins.decorator';
+import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
+import { OrderFields } from 'src/enums/sorting-fields.enum';
+import {
+  GetConditionsProps,
+  GetQueryProps,
+} from 'src/types/get-operators.type';
+import { AppService } from 'src/app.service';
 
-@ApiTags('Orders')
-@Controller('orders')
-@ApiBearerAuth()
+@ControllerWrapper('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly appService: AppService,
+  ) {}
 
   @Get()
-  @ApiQuery({ name: 'conditions', type: 'object', required: true })
+  @GetAllWrapper({
+    fieldsEnum: OrderFields,
+  })
   async getOrders(
-    @Query() conditions: Record<string, any>,
+    @Query()
+    query: GetQueryProps<OrderFields>,
     @Res() res: Response,
   ) {
-    const response: CustomResponseDto =
-      await this.ordersService.getOrders(conditions);
+    const { sortBy, reverse, page, conditions } = query;
+    const parsed: GetConditionsProps<OrderFields>[] =
+      this.appService.validateGetConditions<OrderFields>(conditions);
 
+    const response: CustomResponseDto = await this.ordersService.getOrders({
+      sortBy: sortBy || OrderFields.CREATED_AT,
+      reverse: reverse === 'true',
+      page: Number(page),
+      conditions: parsed || [],
+    });
     return res.status(response.status).json(response);
   }
 
   @Get(':id')
+  @MembersOnly()
   async getOrderById(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.ordersService.getOrderById(id);
@@ -53,46 +66,36 @@ export class OrdersController {
   }
 
   @Post()
-  @ApiOkResponse({ type: CreateOrderDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(orderBody)
+  @MembersOnly()
+  @CreateUpdateWrapper(CreateOrderDto, createOrderBody)
   async createOrder(
     @Body() createOrderDto: CreateOrderDto,
     @Res() res: Response,
   ) {
-    const { userId, items } = createOrderDto;
-    const response: CustomResponseDto = await this.ordersService.createOrder({
-      userId,
-      items,
-    });
+    const response: CustomResponseDto =
+      await this.ordersService.createOrder(createOrderDto);
 
     return res.status(response.status).json(response);
   }
 
   @Patch(':id')
-  @ApiOkResponse({ type: UpdateOrderDto })
-  @ApiConsumes('multipart/form-data')
-  @UsePipes(ValidationPipe)
-  @ApiBody(orderBody)
+  @AdminsOnly()
+  @CreateUpdateWrapper(UpdateOrderDto, updateOrderBody)
   async updateOrder(
     @Param('id') id: string,
     @Body() updateOrderDto: UpdateOrderDto,
     @Res() res: Response,
   ) {
-    const { userId, items } = updateOrderDto;
     const response: CustomResponseDto = await this.ordersService.updateOrder(
       id,
-      {
-        userId,
-        items,
-      },
+      updateOrderDto,
     );
 
     return res.status(response.status).json(response);
   }
 
   @Delete('wipe')
+  @AdminsOnly()
   async deleteAllOrders(@Res() res: Response) {
     const response: CustomResponseDto =
       await this.ordersService.deleteAllOrders();
@@ -101,6 +104,7 @@ export class OrdersController {
   }
 
   @Delete(':id')
+  @AdminsOnly()
   async deleteOrder(@Param('id') id: string, @Res() res: Response) {
     const response: CustomResponseDto =
       await this.ordersService.deleteOrder(id);

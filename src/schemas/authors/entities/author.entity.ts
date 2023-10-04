@@ -28,6 +28,6 @@ export class Author {
   image: string;
 
   // relations:
-  @OneToMany(() => Item, (item) => item.authorId)
-  items: string[];
+  @OneToMany(() => Item, (item) => item.author)
+  items: Item[];
 }

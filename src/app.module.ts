@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { MiddlewareConsumer, Module, RequestMethod } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -7,15 +8,15 @@ import { AuthorsModule } from './schemas/authors/authors.module';
 import { CategoriesModule } from './schemas/categories/categories.module';
 import { ItemsModule } from './schemas/items/items.module';
 import { UsersModule } from './schemas/users/users.module';
-import { AuthModule } from './schemas/auth/auth.module';
 import entities from './entities';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
-import { UserAuthGuard } from './schemas/auth/user-auth.guard';
+import { UserAuthGuard } from './guards/user-auth.guard';
 import { OrdersModule } from './schemas/orders/orders.module';
 import { ReviewsModule } from './schemas/reviews/review.module';
 import constants from 'src/utils/constants/auth.constants';
-import { BackendGuard } from './middlewares/backend.guard';
+import { BackendGuard } from './guards/backend.guard';
+import { AssetsModule } from './assets/assets.module';
 
 @Module({
   imports: [
@@ -37,16 +38,16 @@ import { BackendGuard } from './middlewares/backend.guard';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      signOptions: { expiresIn: constants.ONE_HOUR },
+      signOptions: { expiresIn: constants.ONE_DAY },
     }),
     // PassportModule.register({ defaultStrategy: 'google' }),
-    AuthModule,
     AuthorsModule,
     CategoriesModule,
     ItemsModule,
-    UsersModule,
     OrdersModule,
     ReviewsModule,
+    UsersModule,
+    AssetsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -56,12 +57,16 @@ import { BackendGuard } from './middlewares/backend.guard';
       useClass: UserAuthGuard,
     },
   ],
+  exports: [AppService],
 })
 export class AppModule {
   // Apply the guard middleware to all routes in this app to prevent unauthorized requests
   configure(consumer: MiddlewareConsumer) {
-    consumer
-      .apply(BackendGuard)
-      .forRoutes({ path: '*', method: RequestMethod.ALL });
+    // consumer
+    //   .apply(BackendGuard)
+    //   .forRoutes({ path: '*', method: RequestMethod.ALL });
+    // consumer
+    //   .apply(BackendGuard)
+    //   .forRoutes({ path: '*', method: RequestMethod.ALL });
   }
 }
