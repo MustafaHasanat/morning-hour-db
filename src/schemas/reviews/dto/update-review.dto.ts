@@ -22,11 +22,11 @@ export class UpdateReviewDto extends PartialType(CreateReviewDto) {
     example: 'd996b291-ea4e-486d-a2a3-f79676bfe13c',
     required: false,
   })
-  userId?: string;
+  user?: string;
 
   @ApiProperty({
     example: 'd996b291-ea4e-486d-a2a3-f79676bfe13c',
     required: false,
   })
-  itemId?: string;
+  item?: string;
 }

@@ -12,10 +12,12 @@ import {
   filterNullsObject,
 } from 'src/utils/helpers/filterNulls';
 import { mergeWithoutDups } from 'src/utils/helpers/mergeWithoutDups';
-import { ItemFields } from 'src/enums/sorting-fields.enum';
+import { ItemFields } from 'src/enums/tables-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { AppService } from 'src/app.service';
 import { CustomResponseType } from 'src/types/custom-response.type';
+import { Author } from '../authors/entities/author.entity';
+import { Category } from '../categories/entities/category.entity';
 
 @Injectable()
 export class ItemsService {
@@ -65,32 +67,6 @@ export class ItemsService {
     }
   }
 
-  async getItemsByIds(ids: string[]): Promise<CustomResponseType<Item[]>> {
-    try {
-      const response = await this.itemRepository.findBy({ id: In(ids) });
-
-      return {
-        message: response ? 'Items has been found' : "Items doesn't exist",
-        data: response,
-        status: response ? 200 : 404,
-      };
-    } catch (error) {
-      return { message: 'Error occurred', data: error, status: 500 };
-    }
-  }
-
-  async getItemsByAuthorId(author: string): Promise<Item[]> {
-    return this.itemRepository.find({
-      where: { author: { id: author } },
-    });
-  }
-
-  async getItemsByOrderId(order: string): Promise<Item[]> {
-    return this.itemRepository.find({
-      where: { orders: { id: In([order]) } },
-    });
-  }
-
   async getItemById(id: string): Promise<CustomResponseType<Item>> {
     try {
       const response = await this.itemRepository.findOneBy({ id });
@@ -104,33 +80,71 @@ export class ItemsService {
     }
   }
 
+  async getItemsByIds(itemsIds: string[]): Promise<CustomResponseType<Item[]>> {
+    try {
+      const response = await this.itemRepository.findBy({ id: In(itemsIds) });
+
+      return {
+        message: response ? 'Items has been found' : "Items doesn't exist",
+        data: response || null,
+        status: response ? 200 : 404,
+      };
+    } catch (error) {
+      return { message: 'Error occurred', data: error, status: 500 };
+    }
+  }
+
+  async getItemsByAuthorId(authorId: string): Promise<Item[]> {
+    return this.itemRepository.find({
+      where: { author: { id: authorId } },
+    });
+  }
+
+  async getItemsByCategoryId(categoryId: string): Promise<Item[]> {
+    return this.itemRepository.find({
+      where: { category: { id: categoryId } },
+    });
+  }
+
+  async getItemsByOrderId(order: string): Promise<Item[]> {
+    return this.itemRepository.find({
+      where: { orders: { id: In([order]) } },
+    });
+  }
+
   async createItem(
     createItemDto: CreateItemDto,
   ): Promise<CustomResponseType<Item>> {
     try {
       // check the author and category
-      const author = await this.authorsService.getAuthorById(
-        createItemDto.authorId,
-      );
-      const category = await this.categoriesService.getCategoryById(
-        createItemDto.categoryId,
-      );
+      const {
+        image,
+        screenshots,
+        author: authorId,
+        category: categoryId,
+        ...rest
+      } = createItemDto;
+
+      const author = await this.authorsService.getAuthorById(authorId);
+      const category = await this.categoriesService.getCategoryById(categoryId);
       if (!author || !category) {
         return {
           message: `Provided ${!author ? 'author' : 'category'} does not exist`,
           data: null,
-          status: 400,
+          status: 404,
         };
       }
 
-      // create the item
       const newItem = this.itemRepository.create({
-        ...createItemDto,
-        image: createItemDto?.image?.filename || '',
-        screenshots: createItemDto?.screenshots?.map(
+        author: author.data as Author,
+        category: category.data as Category,
+        image: image?.filename || '',
+        screenshots: screenshots?.map(
           (screenshot) => screenshot?.filename || '',
         ),
+        ...rest,
       });
+
       const response = await this.itemRepository.save(newItem);
 
       return {
@@ -152,13 +166,17 @@ export class ItemsService {
     updateItemDto: UpdateItemDto,
   ): Promise<CustomResponseType<UpdateResult>> {
     try {
+      const {
+        image,
+        screenshots,
+        author: authorId,
+        category: categoryId,
+        ...rest
+      } = updateItemDto;
+
       const item = await this.getItemById(id);
-      const author = await this.authorsService.getAuthorById(
-        updateItemDto.authorId,
-      );
-      const category = await this.categoriesService.getCategoryById(
-        updateItemDto.categoryId,
-      );
+      const author = await this.authorsService.getAuthorById(authorId);
+      const category = await this.categoriesService.getCategoryById(categoryId);
 
       if (!item || !author || !category) {
         return {
@@ -172,13 +190,15 @@ export class ItemsService {
 
       const oldArray: string[] = item.data.screenshots;
 
-      const newArray = filterNullsArray(updateItemDto?.screenshots).map(
+      const newArray = filterNullsArray(screenshots).map(
         (screenshot: { filename: string }) => screenshot.filename,
       );
 
       const newObject = filterNullsObject({
-        ...updateItemDto,
-        image: updateItemDto.image.filename,
+        author: author.data as Author,
+        category: category.data as Category,
+        image: image?.filename,
+        ...rest,
       });
 
       if (newArray.length > 0) {

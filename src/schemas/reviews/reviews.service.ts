@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeleteResult, Repository, UpdateResult } from 'typeorm';
+import { DeleteResult, In, Repository, UpdateResult } from 'typeorm';
 import { Review } from './entities/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { UsersService } from '../users/users.service';
@@ -10,8 +10,10 @@ import { UpdateReviewDto } from './dto/update-review.dto';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { CustomResponseType } from 'src/types/custom-response.type';
 import { AppService } from 'src/app.service';
-import { ReviewFields } from 'src/enums/sorting-fields.enum';
+import { ReviewFields } from 'src/enums/tables-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
+import { User } from '../users/entities/user.entity';
+import { Item } from '../items/entities/item.entity';
 
 @Injectable()
 export class ReviewsService {
@@ -72,13 +74,21 @@ export class ReviewsService {
     }
   }
 
+  async getReviewsByItemId(item: string): Promise<Review[]> {
+    return this.reviewRepository.find({
+      where: { item: { id: In([item]) } },
+    });
+  }
+
   async createReview(
     createReviewDto: CreateReviewDto,
   ): Promise<CustomResponseType<Review>> {
     try {
+      const { user: userId, item: itemId, ...rest } = createReviewDto;
+
       // check the user and the item
-      const user = await this.usersService.getUserById(createReviewDto.userId);
-      const item = await this.itemsService.getItemById(createReviewDto.itemId);
+      const user = await this.usersService.getUserById(userId);
+      const item = await this.itemsService.getItemById(itemId);
       if (!user || !item) {
         return {
           message: `Provided ${!user ? 'user' : 'item'} does not exist`,
@@ -88,7 +98,11 @@ export class ReviewsService {
       }
 
       // create the review
-      const newReview = this.reviewRepository.create(createReviewDto);
+      const newReview = this.reviewRepository.create({
+        user: user.data as User,
+        item: item.data as Item,
+        ...rest,
+      });
       const response = await this.reviewRepository.save(newReview);
 
       return {
@@ -110,9 +124,11 @@ export class ReviewsService {
     updateReviewDto: UpdateReviewDto,
   ): Promise<CustomResponseType<UpdateResult>> {
     try {
+      const { user: userId, item: itemId, ...rest } = updateReviewDto;
+
       // check the user, item, and review
-      const user = await this.usersService.getUserById(updateReviewDto.userId);
-      const item = await this.itemsService.getItemById(updateReviewDto.itemId);
+      const user = await this.usersService.getUserById(userId);
+      const item = await this.itemsService.getItemById(itemId);
       const review = await this.getReviewById(id);
       if (!user || !item || !review) {
         return {
@@ -129,7 +145,11 @@ export class ReviewsService {
         {
           id,
         },
-        filterNullsObject(updateReviewDto),
+        {
+          user: user.data as User,
+          item: item.data as Item,
+          ...filterNullsObject(rest),
+        },
       );
 
       return {

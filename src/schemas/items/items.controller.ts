@@ -23,7 +23,7 @@ import { UpdateItemDto } from './dto/update-item.dto';
 import { updateItemBody } from './dto/update-item.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
-import { ItemFields } from 'src/enums/sorting-fields.enum';
+import { ItemFields } from 'src/enums/tables-fields.enum';
 import {
   GetConditionsProps,
   GetQueryProps,

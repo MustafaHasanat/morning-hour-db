@@ -10,7 +10,7 @@ import { filterNullsObject } from 'src/utils/helpers/filterNulls';
 import { User } from '../users/entities/user.entity';
 import { ItemsService } from '../items/items.service';
 import { CustomResponseType } from 'src/types/custom-response.type';
-import { OrderFields } from 'src/enums/sorting-fields.enum';
+import { OrderFields } from 'src/enums/tables-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { AppService } from 'src/app.service';
 
@@ -81,20 +81,21 @@ export class OrdersService {
     try {
       // check the user
       const user = await this.usersService.getUserById(createOrderDto.user);
-      if (!user.data) {
+      const items = await this.itemsService.getItemsByIds(createOrderDto.items);
+
+      if (!user.data || !items.data) {
         return {
-          message: 'Provided user does not exist',
+          message: 'Provided user or items does not exist',
           data: null,
           status: 404,
         };
       }
 
-      const items = await this.itemsService.getItemsByIds(createOrderDto.items);
-
       // create the order
-      const newOrder = this.orderRepository.create();
-      newOrder.user = user.data as User;
-      newOrder.items = items.data;
+      const newOrder = this.orderRepository.create({
+        user: user.data as User,
+        items: items.data,
+      });
 
       const response = await this.orderRepository.save(newOrder);
 

@@ -20,7 +20,7 @@ import { updateOrderBody } from './dto/update-order.body';
 import { MembersOnly } from 'src/decorators/members.decorator';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
-import { OrderFields } from 'src/enums/sorting-fields.enum';
+import { OrderFields } from 'src/enums/tables-fields.enum';
 import {
   GetConditionsProps,
   GetQueryProps,

@@ -17,6 +17,7 @@ import { ReviewsModule } from './schemas/reviews/review.module';
 import constants from 'src/utils/constants/auth.constants';
 import { BackendGuard } from './guards/backend.guard';
 import { AssetsModule } from './assets/assets.module';
+import { NotificationsModule } from './schemas/notification/notifications.module';
 
 @Module({
   imports: [
@@ -30,7 +31,7 @@ import { AssetsModule } from './assets/assets.module';
         username: configService.get('DB_USERNAME'),
         password: configService.get('DB_PASSWORD'),
         database: configService.get('DB_NAME'),
-        entities: entities,
+        entities,
         synchronize: true,
       }),
       inject: [ConfigService],
@@ -48,6 +49,7 @@ import { AssetsModule } from './assets/assets.module';
     ReviewsModule,
     UsersModule,
     AssetsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [

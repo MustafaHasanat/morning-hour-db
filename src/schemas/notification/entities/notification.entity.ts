@@ -1,16 +1,8 @@
-import { Item } from 'src/schemas/items/entities/item.entity';
 import { User } from 'src/schemas/users/entities/user.entity';
-import {
-  Column,
-  Entity,
-  JoinTable,
-  ManyToMany,
-  ManyToOne,
-  PrimaryGeneratedColumn,
-} from 'typeorm';
+import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity()
-export class Order {
+export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
@@ -20,11 +12,19 @@ export class Order {
   })
   createdAt: Date;
 
+  @Column({
+    nullable: false,
+    default: '[placeholder]',
+  })
+  content: string;
+
+  @Column({
+    nullable: false,
+    default: false,
+  })
+  isRead: boolean;
+
   //relations
   @ManyToOne(() => User, (user) => user.orders)
   user: User;
-
-  @ManyToMany(() => Item)
-  @JoinTable()
-  items: Item[];
 }

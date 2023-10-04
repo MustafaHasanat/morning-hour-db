@@ -6,7 +6,7 @@ import { CreateAuthorDto } from './dto/create-author.dto';
 import { UpdateAuthorDto } from './dto/update-author.dto';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
 import { filterNullsObject } from 'src/utils/helpers/filterNulls';
-import { AuthorFields } from 'src/enums/sorting-fields.enum';
+import { AuthorFields } from 'src/enums/tables-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { AppService } from 'src/app.service';
 import { CustomResponseType } from 'src/types/custom-response.type';

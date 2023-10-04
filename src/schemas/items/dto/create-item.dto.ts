@@ -46,8 +46,8 @@ export class CreateItemDto {
   screenshots: Express.Multer.File[];
 
   @ApiProperty({ example: 'd996b291-ea4e-486d-a2a3-f79676bfe13c' })
-  authorId: string;
+  author: string;
 
   @ApiProperty({ example: 'd996b291-ea4e-486d-a2a3-f79676bfe13c' })
-  categoryId: string;
+  category: string;
 }

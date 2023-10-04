@@ -3,12 +3,12 @@ export const createReviewBody = {
   produces: ['application/json'],
   schema: {
     type: 'object',
-    required: ['text', 'rating', 'userId', 'itemId'],
+    required: ['text', 'rating', 'user', 'item'],
     properties: {
       text: { type: 'string' },
       rating: { type: 'number' },
-      userId: { type: 'string' },
-      itemId: { type: 'string' },
+      user: { type: 'string' },
+      item: { type: 'string' },
     },
   },
 };

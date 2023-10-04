@@ -1,4 +1,4 @@
-import { FilterOperator } from 'src/enums/sorting-fields.enum';
+import { FilterOperator } from 'src/enums/tables-fields.enum';
 
 export type GetConditionsProps<FieldType> = {
   filteredTerm: {
