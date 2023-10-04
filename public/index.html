@@ -15,8 +15,30 @@
       <img src="assets/logoIcon.png" />
     </section>
 
-    <button onclick="window.location.href='/api'">
-      Go to Swagger
-    </button>
+    <button onclick="window.location.href='/api'">Go to Swagger</button>
+
+    <script type="module">
+      // Import the functions you need from the SDKs you need
+      import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js';
+      import { getAnalytics } from 'https://www.gstatic.com/firebasejs/10.4.0/firebase-analytics.js';
+      // TODO: Add SDKs for Firebase products that you want to use
+      // https://firebase.google.com/docs/web/setup#available-libraries
+
+      // Your web app's Firebase configuration
+      // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+      const firebaseConfig = {
+        apiKey: 'AIzaSyDx9wrTps01YwO7M7lciDt69xqjRX7a1zs',
+        authDomain: 'morning-hour-db-2023.firebaseapp.com',
+        projectId: 'morning-hour-db-2023',
+        storageBucket: 'morning-hour-db-2023.appspot.com',
+        messagingSenderId: '220983405891',
+        appId: '1:220983405891:web:63e3ebd05fc33c95f3d3f6',
+        measurementId: 'G-WC9E0K1TE2',
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
+    </script>
   </body>
 </html>
