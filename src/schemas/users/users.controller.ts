@@ -31,7 +31,7 @@ import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { LoginUserDto } from './dto/login-user.dto';
 import { FullTokenPayload } from 'src/types/token-payload.type';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
-import { UserFields } from 'src/enums/sorting-fields.enum';
+import { UserFields } from 'src/enums/tables-fields.enum';
 import {
   GetConditionsProps,
   GetQueryProps,

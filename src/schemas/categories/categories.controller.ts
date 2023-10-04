@@ -23,7 +23,7 @@ import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { updateCategoryBody } from './dto/update-category.body';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
-import { CategoryFields } from 'src/enums/sorting-fields.enum';
+import { CategoryFields } from 'src/enums/tables-fields.enum';
 import {
   GetConditionsProps,
   GetQueryProps,

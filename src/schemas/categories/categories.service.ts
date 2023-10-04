@@ -6,7 +6,7 @@ import { Category } from './entities/category.entity';
 import { CreateCategoryDto } from './dto/create-category.dto';
 import { UpdateCategoryDto } from './dto/update-category.dto';
 import { deleteFile, deleteFiles } from 'src/utils/storageProcess/deleteFiles';
-import { CategoryFields } from 'src/enums/sorting-fields.enum';
+import { CategoryFields } from 'src/enums/tables-fields.enum';
 import { GetAllProps } from 'src/types/get-operators.type';
 import { CustomResponseType } from 'src/types/custom-response.type';
 import { AppService } from 'src/app.service';

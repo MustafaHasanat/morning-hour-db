@@ -3,11 +3,9 @@ import { Author } from 'src/schemas/authors/entities/author.entity';
 import { Category } from 'src/schemas/categories/entities/category.entity';
 import { Order } from 'src/schemas/orders/entities/order.entity';
 import { Review } from 'src/schemas/reviews/entities/review.entity';
-// import { User } from 'src/schemas/users/entities/user.entity';
 import {
   Column,
   Entity,
-  JoinTable,
   ManyToMany,
   ManyToOne,
   OneToMany,
@@ -77,15 +75,5 @@ export class Item {
   reviews: Review[];
 
   @ManyToMany(() => Order)
-  @JoinTable()
   orders: Order[];
-
-  // @ManyToOne(() => User, (user) => user.recentVisited)
-  // userRecentVisited: string;
-
-  // @ManyToOne(() => User, (user) => user.wishlist)
-  // userWishlist: string;
-
-  // @ManyToOne(() => User, (user) => user.cart)
-  // userCart: string;
 }

@@ -20,7 +20,7 @@ import { ControllerWrapper } from 'src/decorators/controller-wrapper.decorator';
 import { CreateUpdateWrapper } from 'src/decorators/create-update-wrapper.decorator';
 import { AdminsOnly } from 'src/decorators/admins.decorator';
 import { GetAllWrapper } from 'src/decorators/get-all-wrapper.decorator';
-import { AuthorFields } from 'src/enums/sorting-fields.enum';
+import { AuthorFields } from 'src/enums/tables-fields.enum';
 import {
   GetConditionsProps,
   GetQueryProps,

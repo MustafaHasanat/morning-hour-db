@@ -24,7 +24,7 @@ import {
   GetConditionsProps,
   GetQueryProps,
 } from 'src/types/get-operators.type';
-import { ReviewFields } from 'src/enums/sorting-fields.enum';
+import { ReviewFields } from 'src/enums/tables-fields.enum';
 import { AppService } from 'src/app.service';
 
 @ControllerWrapper('reviews')

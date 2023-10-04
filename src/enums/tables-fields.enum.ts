@@ -49,6 +49,10 @@ enum UserFields {
   ADDRESS = 'address',
 }
 
+enum NotificationFields {
+  CONTENT = 'content',
+}
+
 // -------------------------
 
 export {
@@ -60,4 +64,5 @@ export {
   OrderFields,
   ReviewFields,
   UserFields,
+  NotificationFields,
 };

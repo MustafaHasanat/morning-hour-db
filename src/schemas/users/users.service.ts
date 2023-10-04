@@ -13,7 +13,7 @@ import { Request } from 'express';
 import { UserRole } from 'src/enums/user-role.enum';
 import { CustomResponseType } from 'src/types/custom-response.type';
 import { GetAllProps } from 'src/types/get-operators.type';
-import { FilterOperator, UserFields } from 'src/enums/sorting-fields.enum';
+import { FilterOperator, UserFields } from 'src/enums/tables-fields.enum';
 import { AppService } from 'src/app.service';
 
 @Injectable()

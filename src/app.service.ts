@@ -4,11 +4,12 @@ import {
   CategoryFields,
   FilterOperator,
   ItemFields,
+  NotificationFields,
   OrderFields,
   ReviewFields,
   SortDirection,
   UserFields,
-} from './enums/sorting-fields.enum';
+} from './enums/tables-fields.enum';
 import { GetAllProps, GetConditionsProps } from './types/get-operators.type';
 import {
   Like,
@@ -57,6 +58,7 @@ export class AppService {
     | OrderFields
     | ReviewFields
     | UserFields
+    | NotificationFields
   >): { message: string; data: FindManyOptions; status: number } {
     try {
       const whereQuery = {};
