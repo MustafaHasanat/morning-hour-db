@@ -76,7 +76,7 @@ export class Item {
   @OneToMany(() => Review, (review) => review.item)
   reviews: Review[];
 
-  @ManyToMany(() => Order, (order) => order.items)
+  @ManyToMany(() => Order)
   @JoinTable()
   orders: Order[];
 

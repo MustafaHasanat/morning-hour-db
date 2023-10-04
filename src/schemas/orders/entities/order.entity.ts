@@ -23,6 +23,6 @@ export class Order {
   @ManyToOne(() => User, (user) => user.orders)
   user: User;
 
-  @ManyToMany(() => Item, (item) => item.orders)
+  @ManyToMany(() => Item)
   items: Item[];
 }
